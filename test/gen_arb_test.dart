@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
 import 'package:appminds_l10n_tools/appminds_l10n_tools.dart';
 
-import 'generate_translations_test.mocks.dart';
+import 'gen_arb_test.mocks.dart';
 
 @GenerateMocks([Directory, File])
 void main() {

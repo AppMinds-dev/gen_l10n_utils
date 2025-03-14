@@ -20,8 +20,8 @@ Map<String, dynamic> loadConfig(File configFile) {
   };
 }
 
-/// Generates merged translation files for supported languages
-void generateTranslations(String projectRoot, File configFile, List<File> arbFiles, {File? mockOutputFile}) {
+/// Generates merged ARB files for supported languages
+void genArb(String projectRoot, File configFile, List<File> arbFiles, {File? mockOutputFile}) {
   try {
     final config = loadConfig(configFile);
     final supportedLanguages = config['languages'] as List<String>;
@@ -61,7 +61,10 @@ void generateTranslations(String projectRoot, File configFile, List<File> arbFil
   }
 }
 
-
+// Keep generateTranslations for backward compatibility
+void generateTranslations(String projectRoot, File configFile, List<File> arbFiles, {File? mockOutputFile}) {
+  genArb(projectRoot, configFile, arbFiles, mockOutputFile: mockOutputFile);
+}
 
 /// Deep merges JSON objects
 Map<String, dynamic> deepMerge(Map<String, dynamic> base, Map<String, dynamic> updates) {

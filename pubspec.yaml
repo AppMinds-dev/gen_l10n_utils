@@ -10,6 +10,7 @@ environment:
 
 executables:
   appminds_l10n_tools: appminds_l10n_tools
+  al10n: appminds_l10n_tools  # Shorter alias
 
 dependencies:
   path: ^1.8.3

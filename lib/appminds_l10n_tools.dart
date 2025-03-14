@@ -1,3 +1,3 @@
 library appminds_l10n_tools;
 
-export 'src/generate_translations.dart';
+export 'src/gen_arb.dart';
