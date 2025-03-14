@@ -1,24 +1,8 @@
+// lib/src/gen_arb.dart
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as p;
-import 'package:yaml/yaml.dart';
-
-/// Loads supported languages from `appminds_l10n.yaml`
-Map<String, dynamic> loadConfig(File configFile) {
-  if (!configFile.existsSync()) {
-    throw Exception('❌ Missing appminds_l10n.yaml. Please create it.');
-  }
-
-  final config = loadYaml(configFile.readAsStringSync());
-  if (config is! Map || config['languages'] is! List || config['default_language'] is! String) {
-    throw Exception('❌ Invalid appminds_l10n.yaml format.');
-  }
-
-  return {
-    'default_language': config['default_language'],
-    'languages': List<String>.from(config['languages']),
-  };
-}
+import 'package:appminds_l10n_tools/src/utils/load_config.dart';
 
 /// Generates merged ARB files for supported languages
 void genArb(String projectRoot, File configFile, List<File> arbFiles, {File? mockOutputFile}) {
@@ -33,15 +17,23 @@ void genArb(String projectRoot, File configFile, List<File> arbFiles, {File? moc
 
     final Map<String, List<File>> languageFiles = { for (var lang in supportedLanguages) lang: [] };
 
+    // Revised language detection - check directory path instead of filename
     for (final file in arbFiles) {
-      final langCode = p.basenameWithoutExtension(file.path).split('_').last;
-      if (languageFiles.containsKey(langCode)) {
-        languageFiles[langCode]!.add(file);
+      // Split the path and look for language directory
+      final pathSegments = p.split(file.path);
+
+      // Find if any path segment matches a supported language
+      for (final lang in supportedLanguages) {
+        if (pathSegments.contains(lang)) {
+          languageFiles[lang]!.add(file);
+          // Once we've found a match, move to the next file
+          break;
+        }
       }
     }
 
     if (languageFiles.values.every((files) => files.isEmpty)) {
-      throw Exception('❌ No .arb files found for supported languages.');
+      throw Exception('❌ No .arb files found for supported languages. Ensure your .arb files are in language-specific directories (e.g., /lib/*/l10n/en/*.arb).');
     }
 
     for (final lang in supportedLanguages) {
@@ -53,7 +45,9 @@ void genArb(String projectRoot, File configFile, List<File> arbFiles, {File? moc
           const JsonEncoder.withIndent("  ").convert(mergedContent),
         );
 
-        print('✅ Translations merged into ${outputFile.path}');
+        print('✅ Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
+      } else {
+        print('⚠️ Warning: No .arb files found for language "$lang"');
       }
     }
   } catch (e) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:appminds_l10n_tools/src/utils/load_config.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -9,6 +10,17 @@ import 'package:path/path.dart' as p;
 import 'package:appminds_l10n_tools/appminds_l10n_tools.dart';
 
 import 'gen_arb_test.mocks.dart';
+
+// Create a wrapper for the file system that can be used in tests
+class FileSystemHelper {
+  static File createMockFile(String path, {bool exists = true, String content = ''}) {
+    final mockFile = MockFile();
+    when(mockFile.path).thenReturn(path);
+    when(mockFile.existsSync()).thenReturn(exists);
+    when(mockFile.readAsStringSync()).thenReturn(content);
+    return mockFile;
+  }
+}
 
 @GenerateMocks([Directory, File])
 void main() {
@@ -47,9 +59,9 @@ languages:
   - de
 ''');
 
-    // Add stubs for the path method - must include language code in filename
-    when(mockArbFiles['en']!.path).thenReturn(p.join(basePath, 'en_en.arb'));
-    when(mockArbFiles['de']!.path).thenReturn(p.join(basePath, 'de_de.arb'));
+    // Update path stubs to use language directories (not filename)
+    when(mockArbFiles['en']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'en', 'texts.arb'));
+    when(mockArbFiles['de']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'de', 'texts.arb'));
 
     // Add existsSync stubs
     when(mockArbFiles['en']!.existsSync()).thenReturn(true);
@@ -81,7 +93,57 @@ languages:
     });
   });
 
+  group('Config file alternatives', () {
+    test('loadConfig works with al10n.yaml file', () {
+      // Create a mock file with a different name but valid content
+      final mockAl10nFile = MockFile();
+      when(mockAl10nFile.path).thenReturn(p.join(mockTempDir.path, 'al10n.yaml'));
+      when(mockAl10nFile.existsSync()).thenReturn(true);
+      when(mockAl10nFile.readAsStringSync()).thenReturn('''
+default_language: en
+languages:
+  - en
+  - de
+''');
+
+      runZoned(() {
+        final config = loadConfig(mockAl10nFile);
+        expect(config['default_language'], equals('en'));
+        expect(config['languages'], equals(['en', 'de']));
+      }, zoneSpecification: ZoneSpecification(
+          print: (_, __, ___, String message) {
+            // Ignore print statements
+          }
+      ));
+    });
+  });
+
   group('ARB file processing', () {
+    test('Correctly identifies language files by directory path', () {
+      // Add an extra file with a completely different path structure
+      final mockExtraFile = MockFile();
+      when(mockExtraFile.path).thenReturn(p.join('/mock/temp', 'widgets', 'texts.arb'));
+      when(mockExtraFile.existsSync()).thenReturn(true);
+      when(mockExtraFile.readAsStringSync()).thenReturn('{}');
+
+      final allFiles = [...mockArbFileList, mockExtraFile];
+
+      // Run test in a zone that captures prints
+      runZoned(() {
+        generateTranslations(mockTempDir.path, mockConfigFile, allFiles);
+      }, zoneSpecification: ZoneSpecification(
+          print: (_, __, ___, String message) {
+            // Ignore print statements
+          }
+      ));
+
+      // Only the files in language dirs should be read
+      verify(mockArbFiles['en']!.readAsStringSync()).called(1);
+      verify(mockArbFiles['de']!.readAsStringSync()).called(1);
+      // This file should not have its content read since it's not in a language dir
+      verifyNever(mockExtraFile.readAsStringSync());
+    });
+
     test('Merges and flattens ARB files correctly', () {
       // Run test in a zone that captures prints
       runZoned(() {
