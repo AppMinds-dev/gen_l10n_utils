@@ -72,8 +72,7 @@ class CreateConfigCommand extends Command<int> {
 
       if (existingFile != null) {
         final shouldUpdate = _askUserConfirmation(
-            '📝 Configuration file ${existingFile.path} already exists. Do you want to update its contents?'
-        );
+            '📝 Configuration file ${existingFile.path} already exists. Do you want to update its contents?');
 
         if (!shouldUpdate) {
           print('❌ Operation cancelled.');

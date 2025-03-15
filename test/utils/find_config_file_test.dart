@@ -31,14 +31,10 @@ void main() {
 
   // Helper function to run tests with suppressed print statements
   void runTestWithSuppressedPrint(Function() testFn) {
-    runZoned(
-        testFn,
-        zoneSpecification: ZoneSpecification(
-            print: (_, __, ___, ____) {
-              // Suppress print output
-            }
-        )
-    );
+    runZoned(testFn,
+        zoneSpecification: ZoneSpecification(print: (_, __, ___, ____) {
+      // Suppress print output
+    }));
   }
 
   test('Finds appminds_l10n.yaml when it exists', () {

@@ -38,8 +38,7 @@ languages:
   test('Throws exception when file does not exist', () {
     when(mockConfigFile.existsSync()).thenReturn(false);
 
-    expect(() => loadConfig(mockConfigFile),
-        throwsA(isA<Exception>()));
+    expect(() => loadConfig(mockConfigFile), throwsA(isA<Exception>()));
     verify(mockConfigFile.existsSync()).called(1);
     verifyNever(mockConfigFile.readAsStringSync());
   });
@@ -52,8 +51,7 @@ invalid:
   format
 ''');
 
-    expect(() => loadConfig(mockConfigFile),
-        throwsA(isA<Exception>()));
+    expect(() => loadConfig(mockConfigFile), throwsA(isA<Exception>()));
     verify(mockConfigFile.existsSync()).called(1);
     verify(mockConfigFile.readAsStringSync()).called(1);
   });
@@ -67,8 +65,7 @@ languages:
   - de
 ''');
 
-    expect(() => loadConfig(mockConfigFile),
-        throwsA(isA<Exception>()));
+    expect(() => loadConfig(mockConfigFile), throwsA(isA<Exception>()));
     verify(mockConfigFile.existsSync()).called(1);
     verify(mockConfigFile.readAsStringSync()).called(1);
   });
@@ -80,8 +77,7 @@ default_language: en
 languages: not-a-list
 ''');
 
-    expect(() => loadConfig(mockConfigFile),
-        throwsA(isA<Exception>()));
+    expect(() => loadConfig(mockConfigFile), throwsA(isA<Exception>()));
     verify(mockConfigFile.existsSync()).called(1);
     verify(mockConfigFile.readAsStringSync()).called(1);
   });

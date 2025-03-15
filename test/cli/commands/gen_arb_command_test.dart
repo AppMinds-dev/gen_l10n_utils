@@ -11,7 +11,8 @@ import 'package:gen_l10n_utils/src/cli/commands/gen_arb_command.dart';
 import 'gen_arb_command_test.mocks.dart';
 
 class FileSystemHelper {
-  static File createMockFile(String path, {bool exists = true, String content = ''}) {
+  static File createMockFile(String path,
+      {bool exists = true, String content = ''}) {
     final mockFile = MockFile();
     when(mockFile.path).thenReturn(path);
     when(mockFile.existsSync()).thenReturn(exists);
@@ -32,11 +33,11 @@ void main() {
 
   void Function() suppressPrints(void Function() fn) {
     return () => runZoned(
-      fn,
-      zoneSpecification: ZoneSpecification(
-        print: (_, __, ___, ____) {},
-      ),
-    );
+          fn,
+          zoneSpecification: ZoneSpecification(
+            print: (_, __, ___, ____) {},
+          ),
+        );
   }
 
   setUp(() {
@@ -71,9 +72,12 @@ languages:
   - de
 ''');
 
-    when(mockArbFiles['en']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'en', 'texts.arb'));
-    when(mockArbFiles['de']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'de', 'texts.arb'));
-    when(mockNestedFile.path).thenReturn(p.join(basePath, 'features', 'settings', 'l10n', 'en', 'texts.arb'));
+    when(mockArbFiles['en']!.path).thenReturn(
+        p.join(basePath, 'features', 'home', 'l10n', 'en', 'texts.arb'));
+    when(mockArbFiles['de']!.path).thenReturn(
+        p.join(basePath, 'features', 'home', 'l10n', 'de', 'texts.arb'));
+    when(mockNestedFile.path).thenReturn(
+        p.join(basePath, 'features', 'settings', 'l10n', 'en', 'texts.arb'));
 
     when(mockArbFiles['en']!.existsSync()).thenReturn(true);
     when(mockArbFiles['de']!.existsSync()).thenReturn(true);
@@ -90,10 +94,7 @@ languages:
     }));
 
     when(mockNestedFile.readAsStringSync()).thenReturn(jsonEncode({
-      'settings': {
-        'volume': 'Volume',
-        'rotation': 'Rotation'
-      }
+      'settings': {'volume': 'Volume', 'rotation': 'Rotation'}
     }));
   });
 
@@ -101,15 +102,18 @@ languages:
     test('Throws an error if config file is missing', () {
       when(mockConfigFile.existsSync()).thenReturn(false);
       expect(
-        suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList)),
+        suppressPrints(() =>
+            command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList)),
         throwsA(isA<Exception>()),
       );
     });
 
     test('Throws an error if config file is invalid', () {
-      when(mockConfigFile.readAsStringSync()).thenReturn('invalid yaml content');
+      when(mockConfigFile.readAsStringSync())
+          .thenReturn('invalid yaml content');
       expect(
-        suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList)),
+        suppressPrints(() =>
+            command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList)),
         throwsA(isA<Exception>()),
       );
     });
@@ -118,13 +122,15 @@ languages:
   group('ARB file processing', () {
     test('Correctly identifies language files by directory path', () {
       final mockExtraFile = MockFile();
-      when(mockExtraFile.path).thenReturn(p.join('/mock/temp', 'widgets', 'texts.arb'));
+      when(mockExtraFile.path)
+          .thenReturn(p.join('/mock/temp', 'widgets', 'texts.arb'));
       when(mockExtraFile.existsSync()).thenReturn(true);
       when(mockExtraFile.readAsStringSync()).thenReturn('{}');
 
       final allFiles = [...mockArbFileList, mockExtraFile];
 
-      suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, allFiles))();
+      suppressPrints(
+          () => command.genArb(mockTempDir.path, mockConfigFile, allFiles))();
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
@@ -145,20 +151,19 @@ languages:
         final json = jsonDecode(content) as Map<String, dynamic>;
 
         // Store the content based on what appears to be in it
-        if (json.containsKey('settings.title') && json['settings.title'] == 'Settings') {
+        if (json.containsKey('settings.title') &&
+            json['settings.title'] == 'Settings') {
           capturedEnContent = json;
-        } else if (json.containsKey('settings.title') && json['settings.title'] == 'Einstellungen') {
+        } else if (json.containsKey('settings.title') &&
+            json['settings.title'] == 'Einstellungen') {
           capturedDeContent = json;
         }
       });
 
       // Run the test
       suppressPrints(() => command.genArb(
-          mockTempDir.path,
-          mockConfigFile,
-          mockArbFileList,
-          mockOutputFile: mockOutputFile
-      ))();
+          mockTempDir.path, mockConfigFile, mockArbFileList,
+          mockOutputFile: mockOutputFile))();
 
       // Verify the content
       expect(capturedEnContent.isNotEmpty, isTrue);
@@ -169,7 +174,8 @@ languages:
       expect(capturedEnContent, containsPair('settings.volume', 'Volume'));
       expect(capturedEnContent, containsPair('settings.rotation', 'Rotation'));
 
-      expect(capturedDeContent, containsPair('settings.title', 'Einstellungen'));
+      expect(
+          capturedDeContent, containsPair('settings.title', 'Einstellungen'));
       expect(capturedDeContent, containsPair('characters.title', 'Charaktere'));
     });
 
@@ -185,12 +191,14 @@ languages:
         'simple': 'Simple value'
       });
 
-      expect(flattened, equals({
-        'settings.volume': 'Volume',
-        'settings.brightness.auto': 'Auto brightness',
-        'settings.brightness.manual': 'Manual brightness',
-        'simple': 'Simple value'
-      }));
+      expect(
+          flattened,
+          equals({
+            'settings.volume': 'Volume',
+            'settings.brightness.auto': 'Auto brightness',
+            'settings.brightness.manual': 'Manual brightness',
+            'simple': 'Simple value'
+          }));
     });
 
     test('Handles missing translations gracefully', () {
@@ -201,7 +209,8 @@ languages:
         'settings.title': 'Einstellungen',
       }));
 
-      suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList))();
+      suppressPrints(() =>
+          command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList))();
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
@@ -210,7 +219,8 @@ languages:
 
     test('Throws an error if no translations are found', () {
       expect(
-        suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, [])),
+        suppressPrints(
+            () => command.genArb(mockTempDir.path, mockConfigFile, [])),
         throwsA(isA<Exception>()),
       );
     });
@@ -229,11 +239,8 @@ languages:
 
       // Run the command
       suppressPrints(() => command.genArb(
-          mockTempDir.path,
-          mockConfigFile,
-          mockArbFileList,
-          mockOutputFile: mockOutputFile
-      ))();
+          mockTempDir.path, mockConfigFile, mockArbFileList,
+          mockOutputFile: mockOutputFile))();
 
       // Verify we wrote exactly twice (once for each language)
       expect(writeCount, equals(2));

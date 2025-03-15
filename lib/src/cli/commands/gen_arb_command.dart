@@ -11,7 +11,8 @@ class GenArbCommand extends Command<int> {
   @override
   final name = 'gen-arb';
   @override
-  final description = 'Generates ARB files based on the localization configuration';
+  final description =
+      'Generates ARB files based on the localization configuration';
 
   @override
   Future<int> run() async {
@@ -41,7 +42,8 @@ class GenArbCommand extends Command<int> {
   }
 
   /// Generates merged ARB files for supported languages
-  void genArb(String projectRoot, File configFile, List<File> arbFiles, {File? mockOutputFile}) {
+  void genArb(String projectRoot, File configFile, List<File> arbFiles,
+      {File? mockOutputFile}) {
     try {
       final config = loadConfig(configFile);
       final supportedLanguages = config['languages'] as List<String>;
@@ -51,7 +53,9 @@ class GenArbCommand extends Command<int> {
         outputDir.createSync(recursive: true);
       }
 
-      final Map<String, List<File>> languageFiles = {for (var lang in supportedLanguages) lang: []};
+      final Map<String, List<File>> languageFiles = {
+        for (var lang in supportedLanguages) lang: []
+      };
 
       // Revised language detection - check directory path instead of filename
       for (final file in arbFiles) {
@@ -69,19 +73,22 @@ class GenArbCommand extends Command<int> {
       }
 
       if (languageFiles.values.every((files) => files.isEmpty)) {
-        throw Exception('❌ No .arb files found for supported languages. Ensure your .arb files are in language-specific directories (e.g., /lib/*/l10n/en/*.arb).');
+        throw Exception(
+            '❌ No .arb files found for supported languages. Ensure your .arb files are in language-specific directories (e.g., /lib/*/l10n/en/*.arb).');
       }
 
       for (final lang in supportedLanguages) {
         if (languageFiles[lang]!.isNotEmpty) {
           final mergedContent = mergeArbFiles(languageFiles[lang]!);
-          final outputFile = mockOutputFile ?? File(p.join(outputDir.path, 'app_$lang.arb'));
+          final outputFile =
+              mockOutputFile ?? File(p.join(outputDir.path, 'app_$lang.arb'));
 
           outputFile.writeAsStringSync(
             const JsonEncoder.withIndent("  ").convert(mergedContent),
           );
 
-          print('✅ Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
+          print(
+              '✅ Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
         } else {
           print('⚠️ Warning: No .arb files found for language "$lang"');
         }
@@ -110,7 +117,8 @@ class GenArbCommand extends Command<int> {
   }
 
   /// Flattens nested JSON objects into dot notation
-  Map<String, dynamic> flattenJson(Map<String, dynamic> json, {String prefix = ''}) {
+  Map<String, dynamic> flattenJson(Map<String, dynamic> json,
+      {String prefix = ''}) {
     final result = <String, dynamic>{};
 
     json.forEach((key, value) {

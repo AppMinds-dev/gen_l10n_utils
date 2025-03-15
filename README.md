@@ -16,7 +16,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  gen_l10n_utils: ^1.0.1
+  gen_l10n_utils: ^1.0.2
 ```
 
 Or install it in your project:

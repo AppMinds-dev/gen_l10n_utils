@@ -1,0 +1,11 @@
+name: gen_l10n_utils_example
+description: Examples for using gen_l10n_utils package
+publish_to: none
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  gen_l10n_utils:
+    path: ../
+  path: ^1.9.1

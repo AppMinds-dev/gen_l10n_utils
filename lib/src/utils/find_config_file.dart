@@ -18,7 +18,8 @@ File findConfigFile(String projectRoot, {FileFactory? fileFactory}) {
     }
   }
 
-  throw Exception('❌ Missing configuration file. Please create either appminds_l10n.yaml or al10n.yaml.');
+  throw Exception(
+      '❌ Missing configuration file. Please create either appminds_l10n.yaml or al10n.yaml.');
 }
 
 /// Function type for creating File objects

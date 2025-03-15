@@ -44,7 +44,8 @@ languages:
   - en
   - de
 ''');
-    when(mockConfigFile.writeAsString(any)).thenAnswer((_) => Future.value(mockConfigFile));
+    when(mockConfigFile.writeAsString(any))
+        .thenAnswer((_) => Future.value(mockConfigFile));
   }
 
   setUp(() {
@@ -78,7 +79,8 @@ languages:
   group('File creation and updates', () {
     test('Creates new config file when none exists', () async {
       // Setup command with no existing file
-      setupCommand(['--default-language', 'en', '--languages', 'en,de'], fileExists: false);
+      setupCommand(['--default-language', 'en', '--languages', 'en,de'],
+          fileExists: false);
 
       // For new file creation, we need to provide the file that will be created
       command.testFile = mockConfigFile;
@@ -89,8 +91,10 @@ languages:
       verify(mockConfigFile.writeAsString(any)).called(1);
     });
 
-    test('Prompts for update when file exists and updates when confirmed', () async {
-      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'], fileExists: true);
+    test('Prompts for update when file exists and updates when confirmed',
+        () async {
+      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'],
+          fileExists: true);
       command.testUserInput = true;
 
       final result = await suppressPrints(() async => await command.run());
@@ -101,7 +105,8 @@ languages:
     });
 
     test('Cancels update when user declines', () async {
-      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'], fileExists: true);
+      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'],
+          fileExists: true);
       command.testUserInput = false;
 
       final result = await suppressPrints(() async => await command.run());
@@ -112,7 +117,8 @@ languages:
 
     test('Creates config with custom language settings', () async {
       // Setup command with no existing file
-      setupCommand(['--default-language', 'de', '--languages', 'de,en,es'], fileExists: false);
+      setupCommand(['--default-language', 'de', '--languages', 'de,en,es'],
+          fileExists: false);
 
       // For new file creation, we need to provide the file that will be created
       command.testFile = mockConfigFile;
@@ -121,13 +127,15 @@ languages:
 
       expect(result, equals(0));
 
-      final captured = verify(mockConfigFile.writeAsString(captureAny)).captured;
+      final captured =
+          verify(mockConfigFile.writeAsString(captureAny)).captured;
       expect(captured.first, contains('default_language: de'));
     });
 
     test('Ensures default language is in languages list', () async {
       // Setup command with no existing file
-      setupCommand(['--default-language', 'fr', '--languages', 'de,en,es'], fileExists: false);
+      setupCommand(['--default-language', 'fr', '--languages', 'de,en,es'],
+          fileExists: false);
 
       // For new file creation, we need to provide the file that will be created
       command.testFile = mockConfigFile;
@@ -136,7 +144,8 @@ languages:
 
       expect(result, equals(0));
 
-      final captured = verify(mockConfigFile.writeAsString(captureAny)).captured;
+      final captured =
+          verify(mockConfigFile.writeAsString(captureAny)).captured;
       expect(captured.first, contains('default_language: fr'));
       expect(captured.first, contains('- fr'));
     });

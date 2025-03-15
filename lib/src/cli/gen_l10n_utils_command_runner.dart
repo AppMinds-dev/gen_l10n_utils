@@ -5,9 +5,9 @@ import 'commands/gen_arb_command.dart';
 class GenL10nUtilsCommandRunner extends CommandRunner<int> {
   GenL10nUtilsCommandRunner()
       : super(
-    'gen_l10n_utils',
-    'Utility tools for Flutter\'s gen_l10n localization',
-  ) {
+          'gen_l10n_utils',
+          'Utility tools for Flutter\'s gen_l10n localization',
+        ) {
     addCommand(CreateConfigCommand());
     addCommand(GenArbCommand());
   }
