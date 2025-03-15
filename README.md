@@ -165,4 +165,4 @@ languages:
 
 ## License
 
-BSD 3-Clause License - see the [LICENSE.md](LICENSE) file for details.
+BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
