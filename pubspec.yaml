@@ -9,12 +9,13 @@ environment:
   sdk: '>=2.17.0 <3.0.0'
 
 executables:
-  appminds_l10n_tools: appminds_l10n_tools
-  al10n: appminds_l10n_tools  # Shorter alias
+  al10n: al10n
 
 dependencies:
+  args: ^2.7.0
   path: ^1.8.3
   yaml: ^3.1.1
+  yaml_edit: ^2.2.2
 
 dev_dependencies:
   test: ^1.24.0
