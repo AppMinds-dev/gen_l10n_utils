@@ -6,7 +6,7 @@ homepage: https://appminds.dev
 documentation: https://github.com/AppMinds-dev/appminds-l10n-tools/wiki
 issue_tracker: https://github.com/AppMinds-dev/appminds-l10n-tools/issues
 environment:
-  sdk: '>=2.17.0 <3.0.0'
+  sdk: '>=2.17.0 <4.0.0'
 
 executables:
   al10n: al10n
