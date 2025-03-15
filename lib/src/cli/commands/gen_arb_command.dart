@@ -91,22 +91,7 @@ class GenArbCommand extends Command<int> {
     }
   }
 
-  /// Deep merges JSON objects
-  Map<String, dynamic> deepMerge(Map<String, dynamic> base, Map<String, dynamic> updates) {
-    for (final key in updates.keys) {
-      if (base.containsKey(key) && base[key] is Map && updates[key] is Map) {
-        base[key] = deepMerge(
-          Map<String, dynamic>.from(base[key]),
-          Map<String, dynamic>.from(updates[key]),
-        );
-      } else {
-        base[key] = updates[key];
-      }
-    }
-    return base;
-  }
-
-  /// Merges multiple .arb files into a single JSON structure
+  /// Merges multiple .arb files into a single JSON structure with flattened keys
   Map<String, dynamic> mergeArbFiles(List<File> arbFiles) {
     final mergedContent = <String, dynamic>{};
 
@@ -114,12 +99,32 @@ class GenArbCommand extends Command<int> {
       final content = file.readAsStringSync();
       try {
         final jsonContent = jsonDecode(content) as Map<String, dynamic>;
-        deepMerge(mergedContent, jsonContent);
+        final flattened = flattenJson(jsonContent);
+        mergedContent.addAll(flattened);
       } catch (e) {
         throw Exception('❌ Error parsing ${file.path}: $e');
       }
     }
 
     return mergedContent;
+  }
+
+  /// Flattens nested JSON objects into dot notation
+  Map<String, dynamic> flattenJson(Map<String, dynamic> json, {String prefix = ''}) {
+    final result = <String, dynamic>{};
+
+    json.forEach((key, value) {
+      final newKey = prefix.isEmpty ? key : '$prefix.$key';
+
+      if (value is Map<String, dynamic>) {
+        // Recursively flatten nested objects
+        result.addAll(flattenJson(value, prefix: newKey));
+      } else {
+        // Add leaf nodes directly
+        result[newKey] = value;
+      }
+    });
+
+    return result;
   }
 }

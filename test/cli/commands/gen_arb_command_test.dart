@@ -28,6 +28,7 @@ void main() {
   late MockFile mockConfigFile;
   late Map<String, MockFile> mockArbFiles;
   late List<File> mockArbFileList;
+  late MockFile mockNestedFile;
 
   void Function() suppressPrints(void Function() fn) {
     return () => runZoned(
@@ -49,9 +50,12 @@ void main() {
       'de': MockFile(),
     };
 
+    mockNestedFile = MockFile();
+
     mockArbFileList = [
       mockArbFiles['en']!,
       mockArbFiles['de']!,
+      mockNestedFile,
     ];
 
     final basePath = p.normalize('/mock/temp');
@@ -69,9 +73,11 @@ languages:
 
     when(mockArbFiles['en']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'en', 'texts.arb'));
     when(mockArbFiles['de']!.path).thenReturn(p.join(basePath, 'features', 'home', 'l10n', 'de', 'texts.arb'));
+    when(mockNestedFile.path).thenReturn(p.join(basePath, 'features', 'settings', 'l10n', 'en', 'texts.arb'));
 
     when(mockArbFiles['en']!.existsSync()).thenReturn(true);
     when(mockArbFiles['de']!.existsSync()).thenReturn(true);
+    when(mockNestedFile.existsSync()).thenReturn(true);
 
     when(mockArbFiles['en']!.readAsStringSync()).thenReturn(jsonEncode({
       'settings.title': 'Settings',
@@ -81,6 +87,13 @@ languages:
     when(mockArbFiles['de']!.readAsStringSync()).thenReturn(jsonEncode({
       'settings.title': 'Einstellungen',
       'characters.title': 'Charaktere',
+    }));
+
+    when(mockNestedFile.readAsStringSync()).thenReturn(jsonEncode({
+      'settings': {
+        'volume': 'Volume',
+        'rotation': 'Rotation'
+      }
     }));
   });
 
@@ -115,14 +128,69 @@ languages:
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
+      verify(mockNestedFile.readAsStringSync()).called(1);
       verifyNever(mockExtraFile.readAsStringSync());
     });
 
     test('Merges and flattens ARB files correctly', () {
-      suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList))();
+      // Set up output file mock
+      final mockOutputFile = MockFile();
+      Map<String, dynamic> capturedEnContent = {};
+      Map<String, dynamic> capturedDeContent = {};
 
-      verify(mockArbFiles['en']!.readAsStringSync()).called(1);
-      verify(mockArbFiles['de']!.readAsStringSync()).called(1);
+      when(mockOutputFile.path).thenReturn('');
+
+      when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
+        final content = invocation.positionalArguments.first as String;
+        final json = jsonDecode(content) as Map<String, dynamic>;
+
+        // Store the content based on what appears to be in it
+        if (json.containsKey('settings.title') && json['settings.title'] == 'Settings') {
+          capturedEnContent = json;
+        } else if (json.containsKey('settings.title') && json['settings.title'] == 'Einstellungen') {
+          capturedDeContent = json;
+        }
+      });
+
+      // Run the test
+      suppressPrints(() => command.genArb(
+          mockTempDir.path,
+          mockConfigFile,
+          mockArbFileList,
+          mockOutputFile: mockOutputFile
+      ))();
+
+      // Verify the content
+      expect(capturedEnContent.isNotEmpty, isTrue);
+      expect(capturedDeContent.isNotEmpty, isTrue);
+
+      expect(capturedEnContent, containsPair('settings.title', 'Settings'));
+      expect(capturedEnContent, containsPair('characters.title', 'Characters'));
+      expect(capturedEnContent, containsPair('settings.volume', 'Volume'));
+      expect(capturedEnContent, containsPair('settings.rotation', 'Rotation'));
+
+      expect(capturedDeContent, containsPair('settings.title', 'Einstellungen'));
+      expect(capturedDeContent, containsPair('characters.title', 'Charaktere'));
+    });
+
+    test('Flattens nested JSON structures', () {
+      final flattened = command.flattenJson({
+        'settings': {
+          'volume': 'Volume',
+          'brightness': {
+            'auto': 'Auto brightness',
+            'manual': 'Manual brightness'
+          }
+        },
+        'simple': 'Simple value'
+      });
+
+      expect(flattened, equals({
+        'settings.volume': 'Volume',
+        'settings.brightness.auto': 'Auto brightness',
+        'settings.brightness.manual': 'Manual brightness',
+        'simple': 'Simple value'
+      }));
     });
 
     test('Handles missing translations gracefully', () {
@@ -137,6 +205,7 @@ languages:
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
+      verify(mockNestedFile.readAsStringSync()).called(1);
     });
 
     test('Throws an error if no translations are found', () {
@@ -149,14 +218,25 @@ languages:
 
   group('Output generation', () {
     test('Writes merged translations to output files', () {
-      final outputFile = MockFile();
-      final outputPath = p.join(mockTempDir.path, 'lib/l10n', 'app_en.arb');
-      when(outputFile.path).thenReturn(outputPath);
-      when(outputFile.writeAsStringSync(any)).thenReturn(null);
+      // Use a single mock but track writes with a counter
+      final mockOutputFile = MockFile();
+      int writeCount = 0;
 
-      suppressPrints(() => command.genArb(mockTempDir.path, mockConfigFile, mockArbFileList, mockOutputFile: outputFile))();
+      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.writeAsStringSync(any)).thenAnswer((_) {
+        writeCount++;
+      });
 
-      verify(outputFile.writeAsStringSync(any)).called(2);
+      // Run the command
+      suppressPrints(() => command.genArb(
+          mockTempDir.path,
+          mockConfigFile,
+          mockArbFileList,
+          mockOutputFile: mockOutputFile
+      ))();
+
+      // Verify we wrote exactly twice (once for each language)
+      expect(writeCount, equals(2));
     });
   });
 }
