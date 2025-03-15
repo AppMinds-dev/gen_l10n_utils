@@ -19,6 +19,12 @@ dependencies:
   appminds_l10n_tools: ^1.0.0
 ```
 
+Or install it in your project:
+
+```bash
+dart pub add appminds_l10n_tools
+```
+
 Or install it globally:
 
 ```bash
