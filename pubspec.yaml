@@ -31,9 +31,6 @@ topics:
   - l10n
   - flutter
 
-# Ensures the package follows Dart conventions
-publish_to: https://pub.dev
-
 # Maintainer information
 maintainers:
   - Manuel Bachl <manuel@appminds.dev>
