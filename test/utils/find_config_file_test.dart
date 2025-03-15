@@ -5,7 +5,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
-import 'package:appminds_l10n_tools/src/utils/find_config_file.dart';
+import 'package:gen_l10n_utils/src/utils/find_config_file.dart';
 
 import 'find_config_file_test.mocks.dart';
 

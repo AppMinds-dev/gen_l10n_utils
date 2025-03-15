@@ -1,4 +1,4 @@
-name: appminds_l10n_tools
+name: gen_l10n_utils
 description: A CLI tool for merging, flattening, and managing gen_l10n translation files.
 version: 1.0.0
 repository: https://github.com/AppMinds-dev/appminds-l10n-tools
@@ -9,7 +9,7 @@ environment:
   sdk: '>=2.17.0 <4.0.0'
 
 executables:
-  al10n: al10n
+  gen_l10n_utils: gen_l10n_utils
 
 dependencies:
   args: ^2.7.0

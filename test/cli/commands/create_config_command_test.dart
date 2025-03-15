@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
-import 'package:appminds_l10n_tools/src/cli/commands/create_config_command.dart';
+import 'package:gen_l10n_utils/src/cli/commands/create_config_command.dart';
 
 import 'create_config_command_test.mocks.dart';
 

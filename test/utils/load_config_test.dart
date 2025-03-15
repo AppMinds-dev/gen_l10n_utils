@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
-import 'package:appminds_l10n_tools/src/utils/load_config.dart';
+import 'package:gen_l10n_utils/src/utils/load_config.dart';
 
 import 'load_config_test.mocks.dart';
 

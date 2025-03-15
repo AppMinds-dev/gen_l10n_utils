@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:yaml_edit/yaml_edit.dart';
-import 'package:appminds_l10n_tools/src/utils/find_config_file.dart';
+import 'package:gen_l10n_utils/src/utils/find_config_file.dart';
 
 class CreateConfigCommand extends Command<int> {
   @override

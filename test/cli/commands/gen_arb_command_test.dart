@@ -6,7 +6,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
-import 'package:appminds_l10n_tools/src/cli/commands/gen_arb_command.dart';
+import 'package:gen_l10n_utils/src/cli/commands/gen_arb_command.dart';
 
 import 'gen_arb_command_test.mocks.dart';
 

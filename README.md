@@ -1,4 +1,4 @@
-# AppMinds Localization Tools
+# gen_l10n Utils by AppMinds.dev
 
 A command-line tool for managing Flutter application localization resources.
 
@@ -16,31 +16,31 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appminds_l10n_tools: ^1.0.0
+  gen_l10n_utils: ^1.0.0
 ```
 
 Or install it in your project:
 
 ```bash
-dart pub add appminds_l10n_tools
+dart pub add gen_l10n_utils
 ```
 
 Or install it globally:
 
 ```bash
-dart pub global activate appminds_l10n_tools
+dart pub global activate gen_l10n_utils
 ```
 
 ## Usage
 
-> **Note:** A configuration file (`appminds_l10n.yaml` or `al10n.yaml`) is required at your project's root level.
+> **Note:** A configuration file (`al10n.yaml`) is required at your project's root level.
 
-### Creating a configuration file `al10n create-config`
+### Creating a configuration file `gen_l10n_utils create-config`
 
 ```bash
-dart run al10n create-config --default-language en --languages en,de,fr
+dart run gen_l10n_utils create-config --default-language en --languages en,de,fr
 # or
-dart run al10n create-config -d en -l en,de,fr
+dart run gen_l10n_utils create-config -d en -l en,de,fr
 ```
 
 This creates an `al10n.yaml` file in your project root with your specified languages:
@@ -57,10 +57,10 @@ Options:
 - `--default-language` or `-d`: Default language code (ISO 639-1) [default: **en**]
 - `--languages` or `-l`: Language codes to support (comma separated) [default: **en**]
 
-### Generating ARB files `al10n gen-arb`
+### Generating ARB files `gen_l10n_utils gen-arb`
 
 ```bash
-dart run al10n gen-arb
+dart run gen_l10n_utils gen-arb
 ```
 
 This command:
@@ -73,11 +73,9 @@ The command automatically:
 - Merges multiple ARB files for the same language
 - Creates output files in the `lib/l10n` directory
 
-I'll add information about running the Flutter/Dart localization generation command after using `al10n gen-arb`. Here's the addition to include in your README:
-
 ## Generating Flutter Localization Files
 
-After running `al10n gen-arb` to create your merged ARB files, you need to run Flutter's localization code generation tool to create the Dart classes:
+After running `gen_l10n_utils gen-arb` to create your merged ARB files, you need to run Flutter's localization code generation tool to create the Dart classes:
 
 ```bash
 flutter gen-l10n
@@ -153,7 +151,7 @@ flutter_intl:
 
 ## Configuration
 
-The package requires either `appminds_l10n.yaml` or `al10n.yaml` in your project root:
+The package requires `al10n.yaml` in your project root:
 
 ```yaml
 default_language: en

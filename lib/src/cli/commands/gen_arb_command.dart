@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:appminds_l10n_tools/src/utils/find_config_file.dart';
-import 'package:appminds_l10n_tools/src/utils/load_config.dart';
+import 'package:gen_l10n_utils/src/utils/find_config_file.dart';
+import 'package:gen_l10n_utils/src/utils/load_config.dart';
 
 class GenArbCommand extends Command<int> {
   @override
