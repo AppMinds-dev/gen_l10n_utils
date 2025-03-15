@@ -1,4 +1,4 @@
-# gen_l10n Utils by AppMinds.dev
+# gen_l10n_utils by AppMinds.dev
 
 A command-line tool for managing Flutter application localization resources.
 
