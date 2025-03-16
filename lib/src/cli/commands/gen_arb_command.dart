@@ -7,6 +7,25 @@ import 'package:path/path.dart' as p;
 import 'package:gen_l10n_utils/src/utils/find_config_file.dart';
 import 'package:gen_l10n_utils/src/utils/load_config.dart';
 
+/// Result of ARB file merging with conflict information
+class MergeResult {
+  final Map<String, dynamic> content;
+  final Map<String, List<ConflictEntry>> conflicts;
+
+  MergeResult(this.content, this.conflicts);
+}
+
+/// Entry representing a key conflict
+class ConflictEntry {
+  final String filePath;
+  final dynamic value;
+  final dynamic existingValue;
+  final String existingFilePath;
+
+  ConflictEntry(
+      this.filePath, this.value, this.existingValue, this.existingFilePath);
+}
+
 class GenArbCommand extends Command<int> {
   @override
   final name = 'gen-arb';
@@ -79,16 +98,26 @@ class GenArbCommand extends Command<int> {
 
       for (final lang in supportedLanguages) {
         if (languageFiles[lang]!.isNotEmpty) {
-          final mergedContent = mergeArbFiles(languageFiles[lang]!);
+          final result = mergeArbFilesWithConflictDetection(languageFiles[lang]!);
+          final mergedContent = result.content;
+
+          // Sort the keys alphabetically
+          final sortedContent = _sortMapByKeys(mergedContent);
+
           final outputFile =
               mockOutputFile ?? File(p.join(outputDir.path, 'app_$lang.arb'));
 
           outputFile.writeAsStringSync(
-            const JsonEncoder.withIndent("  ").convert(mergedContent),
+            const JsonEncoder.withIndent("  ").convert(sortedContent),
           );
 
           print(
               '✅ Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
+
+          // Report conflicts for this language
+          if (result.conflicts.isNotEmpty) {
+            reportConflicts(result.conflicts, lang);
+          }
         } else {
           print('⚠️ Warning: No .arb files found for language "$lang"');
         }
@@ -99,21 +128,75 @@ class GenArbCommand extends Command<int> {
   }
 
   /// Merges multiple .arb files into a single JSON structure with flattened keys
-  Map<String, dynamic> mergeArbFiles(List<File> arbFiles) {
+  /// and detects conflicts
+  MergeResult mergeArbFilesWithConflictDetection(List<File> arbFiles) {
     final mergedContent = <String, dynamic>{};
+    final conflicts = <String, List<ConflictEntry>>{};
+    final keySourceFiles = <String, String>{}; // Track where each key came from
 
     for (final file in arbFiles) {
       final content = file.readAsStringSync();
       try {
         final jsonContent = jsonDecode(content) as Map<String, dynamic>;
         final flattened = flattenJson(jsonContent);
-        mergedContent.addAll(flattened);
+
+        // Check for conflicts while merging
+        for (final entry in flattened.entries) {
+          final key = entry.key;
+          final value = entry.value;
+
+          if (mergedContent.containsKey(key)) {
+            // If the key already exists with a different value
+            if (mergedContent[key] != value) {
+              // Track conflict
+              conflicts.putIfAbsent(key, () => []).add(
+                ConflictEntry(
+                  file.path,
+                  value,
+                  mergedContent[key],
+                  keySourceFiles[key] ?? 'unknown source',
+                ),
+              );
+              // First occurrence wins (don't overwrite)
+              continue;
+            }
+          } else {
+            // Store the source file for this key for later conflict reporting
+            keySourceFiles[key] = file.path;
+          }
+
+          // Add entry (only if it doesn't exist yet or has the same value)
+          mergedContent[key] = value;
+        }
       } catch (e) {
         throw Exception('❌ Error parsing ${file.path}: $e');
       }
     }
 
-    return mergedContent;
+    return MergeResult(mergedContent, conflicts);
+  }
+
+  /// Report conflicts to the user
+  void reportConflicts(Map<String, List<ConflictEntry>> conflicts, String language) {
+    print('\n⚠️ Warning: Found ${conflicts.length} key conflicts in $language files:');
+
+    for (var key in conflicts.keys) {
+      print('  Key "$key" has conflicts:');
+      final firstConflict = conflicts[key]![0];
+      print('    Used value: "${firstConflict.existingValue}" from ${firstConflict.existingFilePath}');
+
+      for (var conflict in conflicts[key]!) {
+        print('    Ignored value: "${conflict.value}" from ${conflict.filePath}');
+      }
+    }
+
+    print('\nFirst occurrence of each key was used in the merged files.\n');
+  }
+
+  /// Merges multiple .arb files into a single JSON structure with flattened keys
+  /// Legacy method kept for backward compatibility
+  Map<String, dynamic> mergeArbFiles(List<File> arbFiles) {
+    return mergeArbFilesWithConflictDetection(arbFiles).content;
   }
 
   /// Flattens nested JSON objects into dot notation
@@ -134,5 +217,17 @@ class GenArbCommand extends Command<int> {
     });
 
     return result;
+  }
+
+  /// Sorts a map by its keys alphabetically
+  Map<String, dynamic> _sortMapByKeys(Map<String, dynamic> map) {
+    final sortedKeys = map.keys.toList()..sort();
+    final sortedMap = <String, dynamic>{};
+
+    for (var key in sortedKeys) {
+      sortedMap[key] = map[key];
+    }
+
+    return sortedMap;
   }
 }

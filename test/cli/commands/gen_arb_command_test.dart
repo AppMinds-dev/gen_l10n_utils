@@ -11,8 +11,7 @@ import 'package:gen_l10n_utils/src/cli/commands/gen_arb_command.dart';
 import 'gen_arb_command_test.mocks.dart';
 
 class FileSystemHelper {
-  static File createMockFile(String path,
-      {bool exists = true, String content = ''}) {
+  static File createMockFile(String path, {bool exists = true, String content = ''}) {
     final mockFile = MockFile();
     when(mockFile.path).thenReturn(path);
     when(mockFile.existsSync()).thenReturn(exists);
@@ -33,11 +32,11 @@ void main() {
 
   void Function() suppressPrints(void Function() fn) {
     return () => runZoned(
-          fn,
-          zoneSpecification: ZoneSpecification(
-            print: (_, __, ___, ____) {},
-          ),
-        );
+      fn,
+      zoneSpecification: ZoneSpecification(
+        print: (_, __, ___, ____) {},
+      ),
+    );
   }
 
   setUp(() {
@@ -130,7 +129,7 @@ languages:
       final allFiles = [...mockArbFileList, mockExtraFile];
 
       suppressPrints(
-          () => command.genArb(mockTempDir.path, mockConfigFile, allFiles))();
+              () => command.genArb(mockTempDir.path, mockConfigFile, allFiles))();
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
@@ -179,6 +178,38 @@ languages:
       expect(capturedDeContent, containsPair('characters.title', 'Charaktere'));
     });
 
+    test('Alphabetically sorts keys in output ARB files', () {
+      // Set up mock ARB files with keys in non-alphabetical order
+      when(mockArbFiles['en']!.readAsStringSync()).thenReturn(jsonEncode({
+        'zebra': 'Zebra',
+        'apple': 'Apple',
+        'banana': 'Banana'
+      }));
+
+      // Set up output file mock
+      final mockOutputFile = MockFile();
+      String? capturedContent;
+
+      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
+        capturedContent = invocation.positionalArguments.first as String;
+      });
+
+      // Run the test
+      suppressPrints(() => command.genArb(
+          mockTempDir.path, mockConfigFile, [mockArbFiles['en']!],
+          mockOutputFile: mockOutputFile))();
+
+      // Verify the content is sorted
+      expect(capturedContent, isNotNull);
+      final json = jsonDecode(capturedContent!) as Map<String, dynamic>;
+
+      // Extract keys and check if they're sorted
+      final keys = json.keys.toList();
+      expect(keys, equals(['apple', 'banana', 'zebra']),
+          reason: 'Keys should be sorted alphabetically');
+    });
+
     test('Flattens nested JSON structures', () {
       final flattened = command.flattenJson({
         'settings': {
@@ -220,9 +251,62 @@ languages:
     test('Throws an error if no translations are found', () {
       expect(
         suppressPrints(
-            () => command.genArb(mockTempDir.path, mockConfigFile, [])),
+                () => command.genArb(mockTempDir.path, mockConfigFile, [])),
         throwsA(isA<Exception>()),
       );
+    });
+
+    test('Detects and correctly handles key conflicts', () {
+      // Set up conflicting ARB files
+      final mockConflictFile = MockFile();
+      when(mockConflictFile.path).thenReturn(
+          p.join('/mock/temp', 'features', 'settings', 'l10n', 'en', 'conflicts.arb'));
+      when(mockConflictFile.existsSync()).thenReturn(true);
+      when(mockConflictFile.readAsStringSync()).thenReturn(jsonEncode({
+        'settings.title': 'App Settings', // This conflicts with existing "Settings" value
+      }));
+
+      final testFiles = [...mockArbFileList, mockConflictFile];
+
+      // Set up to capture content
+      final mockOutputFile = MockFile();
+      Map<String, dynamic>? capturedEnContent;
+
+      when(mockOutputFile.path).thenReturn('');
+
+      // The key issue is here - we need to be able to distinguish between languages in the output
+      int writeCount = 0;
+      when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
+        final content = invocation.positionalArguments.first as String;
+        final json = jsonDecode(content) as Map<String, dynamic>;
+
+        // For English file only (first write in our test)
+        if (writeCount == 0) {
+          capturedEnContent = json;
+        }
+        writeCount++;
+      });
+
+      // Execute with conflict detection
+      suppressPrints(() => command.genArb(
+          mockTempDir.path, mockConfigFile, testFiles,
+          mockOutputFile: mockOutputFile))();
+
+      // First occurrence wins - should have "Settings" not "App Settings"
+      expect(capturedEnContent, isNotNull);
+      expect(capturedEnContent!['settings.title'], equals('Settings'));
+
+      // Test the internal mergeArbFilesWithConflictDetection function directly
+      final result = command.mergeArbFilesWithConflictDetection([
+        mockArbFiles['en']!,
+        mockConflictFile
+      ]);
+
+      // Verify conflicts were detected
+      expect(result.conflicts.isNotEmpty, isTrue);
+      expect(result.conflicts.containsKey('settings.title'), isTrue);
+      expect(result.conflicts['settings.title']![0].value, equals('App Settings'));
+      expect(result.conflicts['settings.title']![0].existingValue, equals('Settings'));
     });
   });
 

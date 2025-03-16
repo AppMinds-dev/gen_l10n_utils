@@ -1,4 +1,4 @@
-# gen_l10n_utils by AppMinds.dev
+# gen_l10n_utils
 
 A command-line tool for managing Flutter application localization resources.
 
@@ -9,6 +9,7 @@ A command-line tool for managing Flutter application localization resources.
 - **Language Support**: Configure multiple languages with a default language
 - **Simple CLI Interface**: Easy-to-use commands with helpful options
 - **Nested JSON Support**: Merge nested JSON structures into flat dot notation
+- **Duplicate Key Detection**: Automatically detect and resolve duplicate translation keys within each language
 
 ## Installation
 
@@ -16,7 +17,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  gen_l10n_utils: ^1.0.2
+  gen_l10n_utils: ^1.0.3
 ```
 
 Or install it in your project:
@@ -67,10 +68,12 @@ This command:
 - Finds all .arb files in your project
 - Detects languages based on directory paths
 - Merges translations into combined ARB files (app_en.arb, etc.) in the `lib/l10n` directory
+- Detects duplicate keys within each language and resolves conflicts (first occurrence wins)
 
 The command automatically:
 - Identifies language by checking directory paths containing language codes
 - Merges multiple ARB files for the same language
+- Detects and reports duplicate key conflicts within each language
 - Creates output files in the `lib/l10n` directory
 
 ## Generating Flutter Localization Files
@@ -107,6 +110,24 @@ The tool will:
 3. Merge all files for each language
 4. Generate combined output files named `app_[lang].arb` (e.g., `app_en.arb`, `app_de.arb`)
 5. Place generated files in the `lib/l10n` directory
+
+## Duplicate Key Detection
+
+When merging multiple ARB files for the same language, the tool automatically detects duplicate keys with different values. When duplicates are found:
+
+- The first occurrence of each key is used in the final output
+- A warning is displayed showing all conflicts detected
+- Each conflict report shows the source files and values involved
+
+Example warning:
+```
+⚠️ Warning: Found 1 key conflicts in en files:
+  Key "settings.title" has conflicts:
+    Used value: "Settings" from lib/features/settings/l10n/en/settings.arb
+    Ignored value: "App Settings" from lib/features/app/l10n/en/app.arb
+
+First occurrence of each key was used in the merged files.
+```
 
 ## Nested JSON Support
 
@@ -164,3 +185,4 @@ languages:
 ## License
 
 BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+```
