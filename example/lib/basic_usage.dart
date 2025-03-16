@@ -10,7 +10,7 @@ void main() async {
 
   // Step 2: Create a config file
   final config = '''
-default_language: en
+base_language: en
 languages:
   - en
   - de

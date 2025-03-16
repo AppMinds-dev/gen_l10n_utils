@@ -98,7 +98,8 @@ class GenArbCommand extends Command<int> {
 
       for (final lang in supportedLanguages) {
         if (languageFiles[lang]!.isNotEmpty) {
-          final result = mergeArbFilesWithConflictDetection(languageFiles[lang]!);
+          final result =
+              mergeArbFilesWithConflictDetection(languageFiles[lang]!);
           final mergedContent = result.content;
 
           // Sort the keys alphabetically
@@ -150,13 +151,13 @@ class GenArbCommand extends Command<int> {
             if (mergedContent[key] != value) {
               // Track conflict
               conflicts.putIfAbsent(key, () => []).add(
-                ConflictEntry(
-                  file.path,
-                  value,
-                  mergedContent[key],
-                  keySourceFiles[key] ?? 'unknown source',
-                ),
-              );
+                    ConflictEntry(
+                      file.path,
+                      value,
+                      mergedContent[key],
+                      keySourceFiles[key] ?? 'unknown source',
+                    ),
+                  );
               // First occurrence wins (don't overwrite)
               continue;
             }
@@ -177,16 +178,20 @@ class GenArbCommand extends Command<int> {
   }
 
   /// Report conflicts to the user
-  void reportConflicts(Map<String, List<ConflictEntry>> conflicts, String language) {
-    print('\n⚠️ Warning: Found ${conflicts.length} key conflicts in $language files:');
+  void reportConflicts(
+      Map<String, List<ConflictEntry>> conflicts, String language) {
+    print(
+        '\n⚠️ Warning: Found ${conflicts.length} key conflicts in $language files:');
 
     for (var key in conflicts.keys) {
       print('  Key "$key" has conflicts:');
       final firstConflict = conflicts[key]![0];
-      print('    Used value: "${firstConflict.existingValue}" from ${firstConflict.existingFilePath}');
+      print(
+          '    Used value: "${firstConflict.existingValue}" from ${firstConflict.existingFilePath}');
 
       for (var conflict in conflicts[key]!) {
-        print('    Ignored value: "${conflict.value}" from ${conflict.filePath}');
+        print(
+            '    Ignored value: "${conflict.value}" from ${conflict.filePath}');
       }
     }
 

@@ -39,15 +39,15 @@ dart pub global activate gen_l10n_utils
 ### Creating a configuration file `gen_l10n_utils create-config`
 
 ```bash
-dart run gen_l10n_utils create-config --default-language en --languages en,de,fr
+dart run gen_l10n_utils create-config --base-language en --languages en,de,fr
 # or
-dart run gen_l10n_utils create-config -d en -l en,de,fr
+dart run gen_l10n_utils create-config -b en -l en,de,fr
 ```
 
 This creates an `al10n.yaml` file in your project root with your specified languages:
 
 ```yaml
-default_language: en
+base_language: en
 languages:
   - en
   - de
@@ -55,7 +55,7 @@ languages:
 ```
 
 Options:
-- `--default-language` or `-d`: Default language code (ISO 639-1) [default: **en**]
+- `--base-language` or `-b`: Base language code (ISO 639-1) [default: **en**]
 - `--languages` or `-l`: Language codes to support (comma separated) [default: **en**]
 
 ### Generating ARB files `gen_l10n_utils gen-arb`
@@ -175,7 +175,7 @@ flutter_intl:
 The package requires `al10n.yaml` in your project root:
 
 ```yaml
-default_language: en
+base_language: en
 languages:
   - en
   - de

@@ -1,58 +1,56 @@
-import 'dart:io';
 import 'dart:async';
 
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
+import 'package:args/args.dart';
 import 'package:test/test.dart';
+import 'package:mockito/mockito.dart';
 import 'package:gen_l10n_utils/src/cli/commands/create_config_command.dart';
 
-import 'create_config_command_test.mocks.dart';
+import '../../utils/command_test_base.dart';
 
-@GenerateMocks([File])
-void main() {
+class TestCreateConfigCommand extends TestCommandBase<CreateConfigCommand> {
+  @override
+  ArgParser get argParser => CreateConfigCommand().argParser;
+
   late CreateConfigCommand command;
-  late MockFile mockConfigFile;
+  bool userInput = false;
 
-  Future<T> suppressPrints<T>(Future<T> Function() fn) {
-    return runZoned<Future<T>>(
-      fn,
-      zoneSpecification: ZoneSpecification(
-        print: (_, __, ___, ____) {},
-      ),
-    );
-  }
-
-  void setupCommand(List<String> args, {bool fileExists = false}) {
+  CreateConfigCommand createCommand() {
     command = CreateConfigCommand();
     command.testMode = true;
-    command.testArgResults = command.argParser.parse(args);
-
-    // Set testFile only when fileExists is true
-    // This matches the behavior in the real code where findConfigFile
-    // returns null or throws when no file exists
-    if (fileExists) {
-      command.testFile = mockConfigFile;
-    } else {
-      command.testFile = null;
-    }
-
-    when(mockConfigFile.path).thenReturn('al10n.yaml');
-    when(mockConfigFile.existsSync()).thenReturn(fileExists);
-    when(mockConfigFile.readAsStringSync()).thenReturn('''
-default_language: en
-languages:
-  - en
-  - de
-''');
-    when(mockConfigFile.writeAsString(any))
-        .thenAnswer((_) => Future.value(mockConfigFile));
+    command.testArgResults = testArgResults;
+    command.testFile = testFile;
+    command.testUserInput = userInput;
+    return command;
   }
+}
+
+void main() {
+  late CommandTestBase testBase;
+  late TestCreateConfigCommand testHelper;
 
   setUp(() {
-    mockConfigFile = MockFile();
+    testBase = CommandTestBase();
+    testBase.setUp();
+
+    testHelper = TestCreateConfigCommand();
+    testHelper.testFile = testBase.mockConfigFile;
+
+    // Properly stub writeAsString to return a Future<File>
+    when(testBase.mockConfigFile.writeAsString(any))
+        .thenAnswer((_) => Future.value(testBase.mockConfigFile));
+
+    // Add stub for readAsStringSync to return valid YAML
+    when(testBase.mockConfigFile.readAsStringSync()).thenReturn('''
+base_language: en
+languages:
+  - en
+  - fr
+''');
   });
 
   group('Command configuration', () {
+    late CreateConfigCommand command;
+
     setUp(() {
       command = CreateConfigCommand();
     });
@@ -64,14 +62,14 @@ languages:
 
     test('Has required arguments configured', () {
       final argParser = command.argParser;
-      expect(argParser.options.containsKey('default-language'), isTrue);
+      expect(argParser.options.containsKey('base-language'), isTrue);
       expect(argParser.options.containsKey('languages'), isTrue);
       expect(argParser.options.containsKey('output'), isFalse);
     });
 
     test('Has correct default values', () {
       final argParser = command.argParser;
-      expect(argParser.options['default-language']?.defaultsTo, equals('en'));
+      expect(argParser.options['base-language']?.defaultsTo, equals('en'));
       expect(argParser.options['languages']?.defaultsTo, equals(['en']));
     });
   });
@@ -79,74 +77,90 @@ languages:
   group('File creation and updates', () {
     test('Creates new config file when none exists', () async {
       // Setup command with no existing file
-      setupCommand(['--default-language', 'en', '--languages', 'en,de'],
-          fileExists: false);
+      when(testBase.mockConfigFile.existsSync()).thenReturn(false);
 
-      // For new file creation, we need to provide the file that will be created
-      command.testFile = mockConfigFile;
+      testHelper
+          .configureWithArgs(['--base-language', 'en', '--languages', 'en,de']);
 
-      final result = await suppressPrints(() async => await command.run());
+      final command = testHelper.createCommand();
+
+      final result =
+          await testBase.suppressPrints(() async => await command.run());
 
       expect(result, equals(0));
-      verify(mockConfigFile.writeAsString(any)).called(1);
+      verify(testBase.mockConfigFile.writeAsString(any)).called(1);
     });
 
     test('Prompts for update when file exists and updates when confirmed',
         () async {
-      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'],
-          fileExists: true);
-      command.testUserInput = true;
+      // Setup for existing file
+      when(testBase.mockConfigFile.existsSync()).thenReturn(true);
 
-      final result = await suppressPrints(() async => await command.run());
+      testHelper
+          .configureWithArgs(['--base-language', 'fr', '--languages', 'fr,es']);
+      testHelper.userInput = true;
+
+      final command = testHelper.createCommand();
+
+      final result =
+          await testBase.suppressPrints(() async => await command.run());
 
       expect(result, equals(0));
-      verify(mockConfigFile.readAsStringSync()).called(1);
-      verify(mockConfigFile.writeAsString(any)).called(1);
+      verify(testBase.mockConfigFile.readAsStringSync()).called(1);
+      verify(testBase.mockConfigFile.writeAsString(any)).called(1);
     });
 
     test('Cancels update when user declines', () async {
-      setupCommand(['--default-language', 'fr', '--languages', 'fr,es'],
-          fileExists: true);
-      command.testUserInput = false;
+      // Setup for existing file
+      when(testBase.mockConfigFile.existsSync()).thenReturn(true);
 
-      final result = await suppressPrints(() async => await command.run());
+      testHelper
+          .configureWithArgs(['--base-language', 'fr', '--languages', 'fr,es']);
+      testHelper.userInput = false;
+
+      final command = testHelper.createCommand();
+
+      final result =
+          await testBase.suppressPrints(() async => await command.run());
 
       expect(result, equals(1));
-      verifyNever(mockConfigFile.writeAsString(any));
+      verifyNever(testBase.mockConfigFile.writeAsString(any));
     });
 
     test('Creates config with custom language settings', () async {
-      // Setup command with no existing file
-      setupCommand(['--default-language', 'de', '--languages', 'de,en,es'],
-          fileExists: false);
+      when(testBase.mockConfigFile.existsSync()).thenReturn(false);
 
-      // For new file creation, we need to provide the file that will be created
-      command.testFile = mockConfigFile;
+      testHelper.configureWithArgs(
+          ['--base-language', 'de', '--languages', 'de,en,es']);
 
-      final result = await suppressPrints(() async => await command.run());
+      final command = testHelper.createCommand();
+
+      final result =
+          await testBase.suppressPrints(() async => await command.run());
 
       expect(result, equals(0));
 
       final captured =
-          verify(mockConfigFile.writeAsString(captureAny)).captured;
-      expect(captured.first, contains('default_language: de'));
+          verify(testBase.mockConfigFile.writeAsString(captureAny)).captured;
+      expect(captured.first, contains('base_language: de'));
     });
 
     test('Ensures default language is in languages list', () async {
-      // Setup command with no existing file
-      setupCommand(['--default-language', 'fr', '--languages', 'de,en,es'],
-          fileExists: false);
+      when(testBase.mockConfigFile.existsSync()).thenReturn(false);
 
-      // For new file creation, we need to provide the file that will be created
-      command.testFile = mockConfigFile;
+      testHelper.configureWithArgs(
+          ['--base-language', 'fr', '--languages', 'de,en,es']);
 
-      final result = await suppressPrints(() async => await command.run());
+      final command = testHelper.createCommand();
+
+      final result =
+          await testBase.suppressPrints(() async => await command.run());
 
       expect(result, equals(0));
 
       final captured =
-          verify(mockConfigFile.writeAsString(captureAny)).captured;
-      expect(captured.first, contains('default_language: fr'));
+          verify(testBase.mockConfigFile.writeAsString(captureAny)).captured;
+      expect(captured.first, contains('base_language: fr'));
       expect(captured.first, contains('- fr'));
     });
   });

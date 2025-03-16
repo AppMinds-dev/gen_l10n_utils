@@ -1,6 +1,7 @@
 import 'package:args/command_runner.dart';
 import 'commands/create_config_command.dart';
 import 'commands/gen_arb_command.dart';
+import 'commands/translate_command.dart';
 
 class GenL10nUtilsCommandRunner extends CommandRunner<int> {
   GenL10nUtilsCommandRunner()
@@ -10,5 +11,6 @@ class GenL10nUtilsCommandRunner extends CommandRunner<int> {
         ) {
     addCommand(CreateConfigCommand());
     addCommand(GenArbCommand());
+    addCommand(TranslateCommand());
   }
 }

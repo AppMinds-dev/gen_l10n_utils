@@ -12,13 +12,13 @@ Map<String, dynamic> loadConfig(File configFile) {
   final config = loadYaml(configFile.readAsStringSync());
   if (config is! Map ||
       config['languages'] is! List ||
-      config['default_language'] is! String) {
+      config['base_language'] is! String) {
     throw Exception(
         '❌ Invalid configuration format in ${p.basename(configFile.path)}.');
   }
 
   return {
-    'default_language': config['default_language'],
+    'base_language': config['base_language'],
     'languages': List<String>.from(config['languages']),
   };
 }

@@ -19,8 +19,8 @@ class CreateConfigCommand extends Command<int> {
 
   CreateConfigCommand() {
     argParser.addOption(
-      'default-language',
-      abbr: 'd',
+      'base-language',
+      abbr: 'b',
       help: 'Default language code (ISO 639-1)',
       defaultsTo: 'en',
     );
@@ -45,12 +45,12 @@ class CreateConfigCommand extends Command<int> {
   Future<int> run() async {
     try {
       final args = testMode ? testArgResults : argResults;
-      final defaultLanguage = args?['default-language'] as String;
+      final baseLanguage = args?['base-language'] as String;
       final languages = args?['languages'] as List<String>;
       const defaultOutputFile = 'al10n.yaml';
 
-      if (!languages.contains(defaultLanguage)) {
-        languages.insert(0, defaultLanguage);
+      if (!languages.contains(baseLanguage)) {
+        languages.insert(0, baseLanguage);
       }
 
       // For existing file handling
@@ -84,7 +84,7 @@ class CreateConfigCommand extends Command<int> {
         final yamlEditor = YamlEditor(content);
 
         // Update values
-        yamlEditor.update(['default_language'], defaultLanguage);
+        yamlEditor.update(['base_language'], baseLanguage);
         yamlEditor.update(['languages'], languages);
 
         await existingFile.writeAsString(yamlEditor.toString());
@@ -98,7 +98,7 @@ class CreateConfigCommand extends Command<int> {
           : File(defaultOutputFile);
 
       // Create YAML content directly instead of using YamlEditor for a new file
-      final yamlContent = '''default_language: $defaultLanguage
+      final yamlContent = '''base_language: $baseLanguage
 languages:
 ${languages.map((lang) => '  - $lang').join('\n')}
 ''';

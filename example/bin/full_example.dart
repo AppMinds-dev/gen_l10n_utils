@@ -16,7 +16,8 @@ void main() async {
 
   // Create configuration file
   print('\n1. Creating configuration file...');
-  await runner.run(['create-config', '--languages', 'en,de,es', '--default-language', 'en']);
+  await runner.run(
+      ['create-config', '--languages', 'en,de,es', '--base-language', 'en']);
 
   // Generate ARB files
   print('\n2. Generating ARB files...');

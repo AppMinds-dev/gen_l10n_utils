@@ -1,13 +1,9 @@
-import 'dart:io';
-
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
+import 'package:mockito/mockito.dart';
 import 'package:gen_l10n_utils/src/utils/load_config.dart';
 
-import 'load_config_test.mocks.dart';
+import 'command_test_base_annotations.mocks.dart';
 
-@GenerateMocks([File])
 void main() {
   late MockFile mockConfigFile;
 
@@ -19,7 +15,7 @@ void main() {
   test('Successfully loads valid config', () {
     when(mockConfigFile.existsSync()).thenReturn(true);
     when(mockConfigFile.readAsStringSync()).thenReturn('''
-default_language: en
+base_language: en
 languages:
   - en
   - de
@@ -29,7 +25,7 @@ languages:
     final config = loadConfig(mockConfigFile);
 
     expect(config, isA<Map<String, dynamic>>());
-    expect(config['default_language'], equals('en'));
+    expect(config['base_language'], equals('en'));
     expect(config['languages'], equals(['en', 'de', 'fr']));
     verify(mockConfigFile.existsSync()).called(1);
     verify(mockConfigFile.readAsStringSync()).called(1);
@@ -59,7 +55,7 @@ invalid:
   test('Throws exception when missing required fields', () {
     when(mockConfigFile.existsSync()).thenReturn(true);
     when(mockConfigFile.readAsStringSync()).thenReturn('''
-# Missing default_language field
+# Missing base_language field
 languages:
   - en
   - de
@@ -73,7 +69,7 @@ languages:
   test('Throws exception when languages is not a list', () {
     when(mockConfigFile.existsSync()).thenReturn(true);
     when(mockConfigFile.readAsStringSync()).thenReturn('''
-default_language: en
+base_language: en
 languages: not-a-list
 ''');
 
@@ -85,7 +81,7 @@ languages: not-a-list
   test('Handles empty languages list', () {
     when(mockConfigFile.existsSync()).thenReturn(true);
     when(mockConfigFile.readAsStringSync()).thenReturn('''
-default_language: en
+base_language: en
 languages: []
 ''');
 
