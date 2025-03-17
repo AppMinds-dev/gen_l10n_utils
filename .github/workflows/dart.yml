@@ -36,7 +36,9 @@ jobs:
         run: dart analyze
 
       - name: Run tests
-        run: dart test
+        run: |
+          echo "Running tests with full output..."
+          dart test --chain-stack-traces --verbose
 
   publish:
     needs: test
