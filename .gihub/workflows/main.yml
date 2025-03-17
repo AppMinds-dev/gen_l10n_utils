@@ -7,15 +7,9 @@ on:
   pull_request:
     branches:
       - '*'
-  workflow_call:
-    inputs:
-      sdk:
-        required: false
-        type: string
-        default: 'stable'
 
 jobs:
   call_test_workflow:
     uses: ./.github/workflows/test.yml
     with:
-      sdk: ${{ inputs.sdk }}
+      sdk: stable
