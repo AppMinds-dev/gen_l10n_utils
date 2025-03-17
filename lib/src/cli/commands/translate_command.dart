@@ -50,7 +50,7 @@ class TranslateCommand extends Command<int> {
 
       // Load config from file
       final configFile =
-      testMode ? testFile : findConfigFile(Directory.current.path);
+          testMode ? testFile : findConfigFile(Directory.current.path);
       if (configFile == null) {
         throw Exception(
             '❌  Missing configuration file. Please create gen_l10n_utils.yaml.');
@@ -60,7 +60,7 @@ class TranslateCommand extends Command<int> {
 
       final baseLanguage = config['base_language'] as String;
       final supportedLanguages =
-      (config['languages'] as List<dynamic>).cast<String>();
+          (config['languages'] as List<dynamic>).cast<String>();
 
       // If a target language is specified, process only that language.
       if (targetLanguage != null) {
@@ -69,8 +69,10 @@ class TranslateCommand extends Command<int> {
           final shouldAddLanguage = await promptAddLanguage(targetLanguage);
           if (shouldAddLanguage) {
             // Add the language to the config file
-            await updateConfigFile(configFile, targetLanguage, supportedLanguages);
-            print('✅  Added "$targetLanguage" to supported languages in config.');
+            await updateConfigFile(
+                configFile, targetLanguage, supportedLanguages);
+            print(
+                '✅  Added "$targetLanguage" to supported languages in config.');
           } else {
             throw Exception(
                 'Language "$targetLanguage" is not configured in gen_l10n_utils.yaml');
@@ -81,7 +83,7 @@ class TranslateCommand extends Command<int> {
             'ℹ️️  Processing translations for $targetLanguage based on $baseLanguage...');
 
         final result =
-        await processTranslationFiles(baseLanguage, targetLanguage);
+            await processTranslationFiles(baseLanguage, targetLanguage);
 
         if (result.created == 0 && result.updated == 0 && result.removed == 0) {
           print(
@@ -94,7 +96,8 @@ class TranslateCommand extends Command<int> {
         return 0;
       } else {
         // If no target language is specified, process all languages in the config, except the base language.
-        print('No language specified. Processing all languages in config file, except the base language.');
+        print(
+            'No language specified. Processing all languages in config file, except the base language.');
         int totalCreated = 0;
         int totalUpdated = 0;
         int totalRemoved = 0;
@@ -103,14 +106,16 @@ class TranslateCommand extends Command<int> {
           if (language == baseLanguage) {
             continue; // Skip the base language
           }
-          print('ℹ️  Processing translations for $language based on $baseLanguage...');
+          print(
+              'ℹ️  Processing translations for $language based on $baseLanguage...');
           final result = await processTranslationFiles(baseLanguage, language);
           totalCreated += result.created;
           totalUpdated += result.updated;
           totalRemoved += result.removed;
         }
 
-        print('✅  Created $totalCreated, updated $totalUpdated, and removed $totalRemoved translation files for all languages except $baseLanguage.');
+        print(
+            '✅  Created $totalCreated, updated $totalUpdated, and removed $totalRemoved translation files for all languages except $baseLanguage.');
         return 0;
       }
     } catch (e) {
@@ -125,12 +130,14 @@ class TranslateCommand extends Command<int> {
       return testPromptResponse!;
     }
 
-    stdout.write('Language "$language" is not in the config file. Add it? (y/N): ');
+    stdout.write(
+        'Language "$language" is not in the config file. Add it? (y/N): ');
     final response = stdin.readLineSync()?.toLowerCase() ?? '';
     return response == 'y' || response == 'yes';
   }
 
-  Future<void> updateConfigFile(File configFile, String newLanguage, List<String> currentLanguages) async {
+  Future<void> updateConfigFile(File configFile, String newLanguage,
+      List<String> currentLanguages) async {
     if (testMode) {
       // In test mode, just simulate the update
       print('Test mode: Simulating config file update to add $newLanguage');
@@ -138,7 +145,8 @@ class TranslateCommand extends Command<int> {
     }
 
     final yamlContent = configFile.readAsStringSync();
-    final updatedLanguages = List<String>.from(currentLanguages)..add(newLanguage);
+    final updatedLanguages = List<String>.from(currentLanguages)
+      ..add(newLanguage);
 
     // Find the languages section in the YAML
     final int langListStart = yamlContent.indexOf('languages:');
@@ -147,7 +155,8 @@ class TranslateCommand extends Command<int> {
     }
 
     // Extract the content before the languages list
-    final beforeLanguages = yamlContent.substring(0, langListStart + 'languages:'.length);
+    final beforeLanguages =
+        yamlContent.substring(0, langListStart + 'languages:'.length);
 
     // Find where the languages list ends by looking for the next non-language list item
     // or the end of the file
@@ -202,7 +211,8 @@ class TranslateCommand extends Command<int> {
 
     for (final baseDir in baseLanguageDirs) {
       final targetDir = p.join(p.dirname(baseDir), targetLanguage);
-      print('Processing directory: $targetDir'); // ADDED: Console output for directory being processed
+      print(
+          'Processing directory: $targetDir'); // ADDED: Console output for directory being processed
       final targetDirObj = createDirectory(targetDir);
 
       // Create the target directory if it doesn't exist
@@ -226,9 +236,8 @@ class TranslateCommand extends Command<int> {
             .toList();
 
         // Create a set of base ARB file names
-        final baseArbFileNames = baseArbFiles
-            .map((file) => p.basename(file.path))
-            .toSet();
+        final baseArbFileNames =
+            baseArbFiles.map((file) => p.basename(file.path)).toSet();
 
         // First check for target files that need to be removed
         for (final targetFile in targetArbFiles) {
@@ -264,9 +273,7 @@ class TranslateCommand extends Command<int> {
     }
 
     return TranslationResult(
-        created: createdFiles,
-        updated: updatedFiles,
-        removed: removedFiles);
+        created: createdFiles, updated: updatedFiles, removed: removedFiles);
   }
 
   List<String> findLanguageDirs(String languageCode) {
@@ -375,7 +382,8 @@ class TranslateCommand extends Command<int> {
       final encoder = JsonEncoder.withIndent('  ');
       targetFile.writeAsStringSync(encoder.convert(updatedTranslation));
 
-      print('Updated: $targetPath (added: $addedKeys, removed: $removedKeys, kept: $keptKeys)');
+      print(
+          'Updated: $targetPath (added: $addedKeys, removed: $removedKeys, kept: $keptKeys)');
     } catch (e) {
       throw Exception('Error processing files $sourcePath and $targetPath: $e');
     }

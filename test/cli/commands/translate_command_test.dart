@@ -50,9 +50,11 @@ class TestableTranslateCommand extends TranslateCommand {
 
 class ConfigTestTranslateCommand extends TestableTranslateCommand {
   @override
-  Future<void> updateConfigFile(File configFile, String newLanguage, List<String> currentLanguages) async {
+  Future<void> updateConfigFile(File configFile, String newLanguage,
+      List<String> currentLanguages) async {
     configFile.readAsStringSync();
-    final updatedLanguages = List<String>.from(currentLanguages)..add(newLanguage);
+    final updatedLanguages = List<String>.from(currentLanguages)
+      ..add(newLanguage);
 
     final configLines = [
       'base_language: en',
@@ -251,20 +253,14 @@ output_dir: lib/l10n
       // Prepare test data
       final baseJsonData = {
         'greeting': 'Hello',
-        '@greeting': {
-          'description': 'A greeting message'
-        },
+        '@greeting': {'description': 'A greeting message'},
         'newKey': 'New message',
-        '@newKey': {
-          'description': 'A new message'
-        }
+        '@newKey': {'description': 'A new message'}
       };
 
       final existingTranslation = {
         'greeting': 'Bonjour',
-        '@greeting': {
-          'description': 'A greeting message'
-        }
+        '@greeting': {'description': 'A greeting message'}
       };
 
       testHelper.configureWithArgs(['--language', 'fr']);
@@ -284,7 +280,8 @@ output_dir: lib/l10n
 
       when(mockFrFile.existsSync()).thenReturn(true);
       when(mockFrFile.path).thenReturn('mock/lib/l10n/fr/app.arb');
-      when(mockFrFile.readAsStringSync()).thenReturn(jsonEncode(existingTranslation));
+      when(mockFrFile.readAsStringSync())
+          .thenReturn(jsonEncode(existingTranslation));
       when(mockFrFile.writeAsStringSync(captureAny)).thenAnswer((inv) {
         capturedContent = inv.positionalArguments[0];
         return;
@@ -315,29 +312,26 @@ output_dir: lib/l10n
 
       // Verify the updated content
       final Map<String, dynamic> updatedJson = json.decode(capturedContent);
-      expect(updatedJson['greeting'], equals('Bonjour')); // Existing translation preserved
-      expect(updatedJson['newKey'], equals('')); // New key added with empty value
-      expect(updatedJson['@newKey']['description'], equals('A new message')); // Metadata preserved
+      expect(updatedJson['greeting'],
+          equals('Bonjour')); // Existing translation preserved
+      expect(
+          updatedJson['newKey'], equals('')); // New key added with empty value
+      expect(updatedJson['@newKey']['description'],
+          equals('A new message')); // Metadata preserved
     });
 
     test('Removes keys that no longer exist in base file', () async {
       // Prepare test data
       final baseJsonData = {
         'greeting': 'Hello',
-        '@greeting': {
-          'description': 'A greeting message'
-        }
+        '@greeting': {'description': 'A greeting message'}
       };
 
       final existingTranslation = {
         'greeting': 'Bonjour',
-        '@greeting': {
-          'description': 'A greeting message'
-        },
+        '@greeting': {'description': 'A greeting message'},
         'obsoleteKey': 'Old message',
-        '@obsoleteKey': {
-          'description': 'An old message'
-        }
+        '@obsoleteKey': {'description': 'An old message'}
       };
 
       testHelper.configureWithArgs(['--language', 'fr']);
@@ -356,7 +350,8 @@ output_dir: lib/l10n
 
       when(mockFrFile.existsSync()).thenReturn(true);
       when(mockFrFile.path).thenReturn('mock/lib/l10n/fr/app.arb');
-      when(mockFrFile.readAsStringSync()).thenReturn(jsonEncode(existingTranslation));
+      when(mockFrFile.readAsStringSync())
+          .thenReturn(jsonEncode(existingTranslation));
       when(mockFrFile.writeAsStringSync(captureAny)).thenAnswer((inv) {
         capturedContent = inv.positionalArguments[0];
         return;
@@ -387,9 +382,12 @@ output_dir: lib/l10n
 
       // Verify the updated content
       final Map<String, dynamic> updatedJson = json.decode(capturedContent);
-      expect(updatedJson['greeting'], equals('Bonjour')); // Existing translation preserved
-      expect(updatedJson.containsKey('obsoleteKey'), isFalse); // Old key removed
-      expect(updatedJson.containsKey('@obsoleteKey'), isFalse); // Old key metadata removed
+      expect(updatedJson['greeting'],
+          equals('Bonjour')); // Existing translation preserved
+      expect(
+          updatedJson.containsKey('obsoleteKey'), isFalse); // Old key removed
+      expect(updatedJson.containsKey('@obsoleteKey'),
+          isFalse); // Old key metadata removed
     });
   });
 
@@ -529,10 +527,7 @@ output_dir: lib/l10n
       when(mockEnFile.path).thenReturn('mock/lib/l10n/en/app.arb');
       when(mockEnFile.readAsStringSync()).thenReturn('{"key": "value"}');
 
-      command.testLanguageDirs = [
-        'mock/lib/l10n/en',
-        'mock/lib/other/en'
-      ];
+      command.testLanguageDirs = ['mock/lib/l10n/en', 'mock/lib/other/en'];
 
       final processedDirs = <String>[];
       command.testCreateDir = (String path) {
