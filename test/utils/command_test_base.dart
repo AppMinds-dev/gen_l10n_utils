@@ -100,11 +100,11 @@ languages:
             .thenReturn('/lib/l10n/${languageCodes[i]}/app.arb');
         when(mockFiles[i].readAsString())
             .thenAnswer((_) => Future.value(jsonEncode({
-          'greeting': 'Hello',
-          'farewell': 'Goodbye',
-          '@greeting': {'description': 'Greeting message'},
-          '@farewell': {'description': 'Farewell message'}
-        })));
+                  'greeting': 'Hello',
+                  'farewell': 'Goodbye',
+                  '@greeting': {'description': 'Greeting message'},
+                  '@farewell': {'description': 'Farewell message'}
+                })));
       } else {
         when(mockDirs[i].listSync()).thenReturn([]);
       }
@@ -116,10 +116,10 @@ languages:
 
   // Setup a test command with common mocks
   void setupCommand<T extends TestCommandBase>(
-      T command,
-      List<String> args, {
-        bool hasLanguageDirs = true,
-      }) {
+    T command,
+    List<String> args, {
+    bool hasLanguageDirs = true,
+  }) {
     command.testFile = mockConfigFile;
     command.testLibDir = mockLibDir;
     command.configureWithArgs(args);
