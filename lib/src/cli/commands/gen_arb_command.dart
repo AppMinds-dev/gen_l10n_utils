@@ -46,7 +46,7 @@ class GenArbCommand extends Command<int> {
         configFile = findConfigFile(currentDir);
       } catch (e) {
         stderr.writeln(
-            '❌ Error: Configuration file $configFileName not found. Run create-config command first.');
+            '❌  Error: Configuration file $configFileName not found. Run create-config command first.');
         return 1;
       }
 
@@ -65,7 +65,7 @@ class GenArbCommand extends Command<int> {
         return 1;
       }
     } catch (e) {
-      stderr.writeln('❌ Error: ${e.toString()}');
+      stderr.writeln('❌  Error: ${e.toString()}');
       return 1;
     }
   }
@@ -102,7 +102,7 @@ class GenArbCommand extends Command<int> {
 
       if (languageFiles.values.every((files) => files.isEmpty)) {
         throw Exception(
-            '❌ No .arb files found for supported languages. Ensure your .arb files are in language-specific directories (e.g., /lib/*/l10n/en/*.arb).');
+            '❌  No .arb files found for supported languages. Ensure your .arb files are in language-specific directories (e.g., /lib/*/l10n/en/*.arb).');
       }
 
       for (final lang in supportedLanguages) {
@@ -122,18 +122,18 @@ class GenArbCommand extends Command<int> {
           );
 
           print(
-              '✅ Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
+              '✅  Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
 
           // Report conflicts for this language
           if (result.conflicts.isNotEmpty) {
             reportConflicts(result.conflicts, lang);
           }
         } else {
-          print('⚠️ Warning: No .arb files found for language "$lang"');
+          print('⚠️  Warning: No .arb files found for language "$lang"');
         }
       }
     } catch (e) {
-      throw Exception('❌ Error during translation merging: $e');
+      throw Exception('❌  Error during translation merging: $e');
     }
   }
 
@@ -179,7 +179,7 @@ class GenArbCommand extends Command<int> {
           mergedContent[key] = value;
         }
       } catch (e) {
-        throw Exception('❌ Error parsing ${file.path}: $e');
+        throw Exception('❌  Error parsing ${file.path}: $e');
       }
     }
 
@@ -190,7 +190,7 @@ class GenArbCommand extends Command<int> {
   void reportConflicts(
       Map<String, List<ConflictEntry>> conflicts, String language) {
     print(
-        '\n⚠️ Warning: Found ${conflicts.length} key conflicts in $language files:');
+        '\n⚠️  Warning: Found ${conflicts.length} key conflicts in $language files:');
 
     for (var key in conflicts.keys) {
       print('  Key "$key" has conflicts:');

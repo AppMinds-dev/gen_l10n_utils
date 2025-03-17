@@ -9,12 +9,12 @@ File findConfigFile(String projectRoot, {FileFactory? fileFactory}) {
   final file = fileFactory(configPath);
 
   if (file.existsSync()) {
-    print('✅ Using configuration from ${p.basename(configPath)}');
+    print('✅  Using configuration from ${p.basename(configPath)}');
     return file;
   }
 
   throw Exception(
-      '❌ Missing configuration file. Please create gen_l10n_utils.yaml in your project root.');
+      '❌  Missing configuration file. Please create gen_l10n_utils.yaml in your project root.');
 }
 
 /// Function type for creating File objects

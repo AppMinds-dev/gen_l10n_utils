@@ -6,7 +6,7 @@ import 'package:yaml/yaml.dart';
 Map<String, dynamic> loadConfig(File configFile) {
   if (!configFile.existsSync()) {
     throw Exception(
-        '❌ Missing configuration file. Please create gen_l10n_utils.yaml in your project root.');
+        '❌  Missing configuration file. Please create gen_l10n_utils.yaml in your project root.');
   }
 
   final config = loadYaml(configFile.readAsStringSync());
@@ -14,7 +14,7 @@ Map<String, dynamic> loadConfig(File configFile) {
       config['languages'] is! List ||
       config['base_language'] is! String) {
     throw Exception(
-        '❌ Invalid configuration format in ${p.basename(configFile.path)}.');
+        '❌  Invalid configuration format in ${p.basename(configFile.path)}.');
   }
 
   return {

@@ -17,7 +17,7 @@ languages:
   - fr
 ''';
 
-  File('${projectDir.path}/al10n.yaml')
+  File('${projectDir.path}/gen_l10n_utils.yaml')
     ..createSync()
     ..writeAsStringSync(config);
 

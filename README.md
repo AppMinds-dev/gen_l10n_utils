@@ -2,14 +2,23 @@
 
 A command-line tool for managing Flutter application localization resources.
 
+## Overview
+
+Here's a quick overview of the available commands:
+
+-   `create-config`: Creates a configuration file (`gen_l10n_utils.yaml`) in your project's root directory.
+-   `translate`: Creates or updates translation files for specified languages based on the base language.
+-   `gen-arb`: Generates ARB files by merging translation files from your project.
+
 ## Features
 
-- **Configuration Management**: Create and update localization configuration files
-- **ARB Generation**: Generate ARB (Application Resource Bundle) files for translations
-- **Language Support**: Configure multiple languages with a default language
-- **Simple CLI Interface**: Easy-to-use commands with helpful options
-- **Nested JSON Support**: Merge nested JSON structures into flat dot notation
-- **Duplicate Key Detection**: Automatically detect and resolve duplicate translation keys within each language
+-   **Configuration Management**: Create and update localization configuration files
+-   **ARB Generation**: Generate ARB (Application Resource Bundle) files for translations
+-   **Language Support**: Configure multiple languages with a default language
+-   **Simple CLI Interface**: Easy-to-use commands with helpful options
+-   **Nested JSON Support**: Merge nested JSON structures into flat dot notation
+-   **Duplicate Key Detection**: Automatically detect and resolve duplicate translation keys within each language
+-   **Translation Management**: Create or update translation files for a specific language based on the base language
 
 ## Installation
 
@@ -34,7 +43,7 @@ dart pub global activate gen_l10n_utils
 
 ## Usage
 
-> **Note:** A configuration file (`al10n.yaml`) is required at your project's root level.
+> **Note:** A configuration file (`gen_l10n_utils.yaml`) is required at your project's root level.
 
 ### Creating a configuration file `gen_l10n_utils create-config`
 
@@ -44,7 +53,7 @@ dart run gen_l10n_utils create-config --base-language en --languages en,de,fr
 dart run gen_l10n_utils create-config -b en -l en,de,fr
 ```
 
-This creates an `al10n.yaml` file in your project root with your specified languages:
+This creates an `gen_l10n_utils.yaml` file in your project root with your specified languages:
 
 ```yaml
 base_language: en
@@ -55,8 +64,32 @@ languages:
 ```
 
 Options:
-- `--base-language` or `-b`: Base language code (ISO 639-1) [default: **en**]
-- `--languages` or `-l`: Language codes to support (comma separated) [default: **en**]
+
+-   `--base-language` or `-b`: Base language code (ISO 639-1) \[default: \*\*en\*\*]
+-   `--languages` or `-l`: Language codes to support (comma separated) \[default: \*\*en\*\*]
+
+### Translating ARB files `gen_l10n_utils translate`
+
+```bash
+dart run gen_l10n_utils translate
+# or
+dart run gen_l10n_utils translate --language fr
+# or
+dart run gen_l10n_utils translate -l fr
+```
+
+This command:
+
+-   Creates or updates translation files for a specific language based on the base language.
+-   Adds missing keys from the base language to the target language files.
+-   Removes keys from the target language files that no longer exist in the base language files.
+-   Can automatically add the language to the config file if it is not already present.
+-   If no language is specified, the command will run for all languages defined in the configuration file.
+-   ℹ️ Displays the language currently being processed in the console output.
+
+Options:
+
+-   `--language` or `-l`: The language code to create translations for (optional). If not specified, all languages in the config will be processed.
 
 ### Generating ARB files `gen_l10n_utils gen-arb`
 
@@ -65,18 +98,20 @@ dart run gen_l10n_utils gen-arb
 ```
 
 This command:
-- Finds all .arb files in your project
-- Detects languages based on directory paths
-- Merges translations into combined ARB files (app_en.arb, etc.) in the `lib/l10n` directory
-- Detects duplicate keys within each language and resolves conflicts (first occurrence wins)
+
+-   Finds all .arb files in your project
+-   Detects languages based on directory paths
+-   Merges translations into combined ARB files (app\_en.arb, etc.) in the `lib/l10n` directory
+-   Detects duplicate keys within each language and resolves conflicts (first occurrence wins)
 
 The command automatically:
-- Identifies language by checking directory paths containing language codes
-- Merges multiple ARB files for the same language
-- Detects and reports duplicate key conflicts within each language
-- Creates output files in the `lib/l10n` directory
 
-## Generating Flutter Localization Files
+-   Identifies language by checking directory paths containing language codes
+-   Merges multiple ARB files for the same language
+-   Detects and reports duplicate key conflicts within each language
+-   Creates output files in the `lib/l10n` directory
+
+### Generating Flutter Localization Files
 
 After running `gen_l10n_utils gen-arb` to create your merged ARB files, you need to run Flutter's localization code generation tool to create the Dart classes:
 
@@ -88,45 +123,53 @@ This command will process the ARB files in your `lib/l10n` directory and generat
 
 Alternatively, if you're using the `flutter_localizations` package with `generate: true` in your `pubspec.yaml`, this generation will happen automatically when you build or run your app.
 
-For more information on Flutter's internationalization system, see the [official documentation](https://docs.flutter.dev/development/accessibility-and-localization/internationalization).
+For more information on Flutter's internationalization system, see the \[official documentation](https://docs.flutter.dev/development/accessibility-and-localization/internationalization).
 
 ## Directory Structure Requirements
 
 This package works with any common Flutter project structure, as long as your translation files follow these rules:
 
-- All `.arb` files must be within the `/lib` folder
-- Files must be placed in language-specific directories matching the ISO language codes from your config
-- The directory path must include the language code (e.g., `/en/`, `/de/`, etc.)
+-   All \`.arb\` files must be within the \`/lib\` folder
+-   Files must be placed in language-specific directories matching the ISO language codes from your config
+-   The directory path must include the language code (e.g., \`/en/\`, \`/de/\`, etc.)
 
 Examples of supported structures:
-- `lib/features/feature1/l10n/en/translations.arb`
-- `lib/core/l10n/en/common.arb`
-- `lib/modules/auth/assets/en/auth_strings.arb`
-- `lib/en/app_translations.arb`
+
+-   `lib/features/feature1/l10n/en/translations.arb`
+-   `lib/core/l10n/en/common.arb`
+-   `lib/modules/auth/assets/en/auth_strings.arb`
+-   `lib/en/app_translations.arb`
 
 The tool will:
-1. Find all `.arb` files under `/lib`
-2. Determine the language by checking directory paths
-3. Merge all files for each language
-4. Generate combined output files named `app_[lang].arb` (e.g., `app_en.arb`, `app_de.arb`)
-5. Place generated files in the `lib/l10n` directory
+
+1.  Find all \`.arb\` files under \`/lib\`
+2.  Determine the language by checking directory paths
+3.  Merge all files for each language
+4.  Generate combined output files named `app_[lang].arb` (e.g., `app_en.arb`, `app_de.arb`)
+5.  Place generated files in the `lib/l10n` directory
 
 ## Duplicate Key Detection
 
 When merging multiple ARB files for the same language, the tool automatically detects duplicate keys with different values. When duplicates are found:
 
-- The first occurrence of each key is used in the final output
-- A warning is displayed showing all conflicts detected
-- Each conflict report shows the source files and values involved
+-   The first occurrence of each key is used in the final output
+-   A warning is displayed showing all conflicts detected
+-   Each conflict report shows the source files and values involved
 
 Example warning:
+
 ```
+
 ⚠️ Warning: Found 1 key conflicts in en files:
-  Key "settings.title" has conflicts:
-    Used value: "Settings" from lib/features/settings/l10n/en/settings.arb
-    Ignored value: "App Settings" from lib/features/app/l10n/en/app.arb
+
+Key "settings.title" has conflicts:
+
+Used value: "Settings" from lib/features/settings/l10n/en/settings.arb
+
+Ignored value: "App Settings" from lib/features/app/l10n/en/app.arb
 
 First occurrence of each key was used in the merged files.
+
 ```
 
 ## Nested JSON Support
@@ -137,11 +180,13 @@ For example, you can organize your translations like this:
 
 ```json
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "forgotPassword": "Forgot Password"
-  }
+    "auth": {
+        "buttons": {
+            "login": "Login",
+            "register": "Register"
+        },
+        "forgotPassword": "Forgot Password"
+    }
 }
 ```
 
@@ -149,7 +194,7 @@ The tool will merge and maintain these nested structures in the final output fil
 
 ## Integration with Flutter Localization
 
-The generated ARB files are compatible with Flutter's [flutter_localizations](https://api.flutter.dev/flutter/flutter_localizations/flutter_localizations-library.html) package and the [gen_l10n](https://pub.dev/packages/intl_translation) tool.
+The generated ARB files are compatible with Flutter's \[flutter\_localizations](https://api.flutter.dev/flutter/flutter_localizations-library.html) package and the \[gen\_l10n](https://pub.dev/packages/intl_translation) tool.
 
 After generating your ARB files, you can use them with Flutter's localization system by configuring your `pubspec.yaml`:
 
@@ -172,7 +217,7 @@ flutter_intl:
 
 ## Configuration
 
-The package requires `al10n.yaml` in your project root:
+The package requires `gen_l10n_utils.yaml` in your project root:
 
 ```yaml
 base_language: en
@@ -184,10 +229,4 @@ languages:
 
 ## License
 
-BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
-
-Todo's:
-
-- impklement github actions
-- fix translate_command_test.dart
-- 
+BSD 3-Clause License - see the \[LICENSE](LICENSE) file for details.

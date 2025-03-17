@@ -62,10 +62,10 @@ class CreateConfigCommand extends Command<int> {
 
       if (exists) {
         final shouldUpdate = _askUserConfirmation(
-            '📝 Configuration file $configFileName already exists. Do you want to update its contents?');
+            '📝  Configuration file $configFileName already exists. Do you want to update its contents?');
 
         if (!shouldUpdate) {
-          print('❌ Operation cancelled.');
+          print('❌  Operation cancelled.');
           return 1;
         }
 
@@ -78,7 +78,7 @@ class CreateConfigCommand extends Command<int> {
         yamlEditor.update(['languages'], languages);
 
         await configFile.writeAsString(yamlEditor.toString());
-        print('✅ Updated configuration file: ${configFile.path}');
+        print('✅  Updated configuration file: ${configFile.path}');
         return 0;
       }
 
@@ -93,7 +93,7 @@ ${languages.map((lang) => '  - $lang').join('\n')}
 ''';
 
       await newFile.writeAsString(yamlContent);
-      print('✅ Created configuration file: ${newFile.path}');
+      print('✅  Created configuration file: ${newFile.path}');
       return 0;
     } catch (e) {
       stderr.writeln('❌ Error: ${e.toString()}');
