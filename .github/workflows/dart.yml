@@ -38,7 +38,7 @@ jobs:
       - name: Run tests
         run: |
           echo "Running tests with full output..."
-          dart test --chain-stack-traces --verbose
+          dart test --chain-stack-traces --verbose-trace
 
   publish:
     needs: test
