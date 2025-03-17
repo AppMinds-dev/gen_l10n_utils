@@ -9,7 +9,7 @@ void main() {
 
   setUp(() {
     mockConfigFile = MockFile();
-    when(mockConfigFile.path).thenReturn('/mock/project/appminds_l10n.yaml');
+    when(mockConfigFile.path).thenReturn('/mock/project/gen_l10n_utils.yaml');
   });
 
   test('Successfully loads valid config', () {

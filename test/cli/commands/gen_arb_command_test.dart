@@ -32,11 +32,13 @@ class TestGenArbCommand extends TestCommandBase<GenArbCommand> {
   }
 
   Future<int> runGenArb(String basePath, [MockFile? mockOutputFile]) async {
-    command.genArb(basePath, testFile!, testArbFiles ?? [],
-        mockOutputFile: mockOutputFile);
-
-    // Return a success code
-    return Future.value(0);
+    try {
+      command.genArb(basePath, testFile!, testArbFiles ?? [],
+          mockOutputFile: mockOutputFile);
+      return Future.value(0);
+    } catch (e) {
+      rethrow;
+    }
   }
 }
 
@@ -51,11 +53,13 @@ void main() {
     testBase = CommandTestBase();
     testBase.setUp();
 
+    when(testBase.mockConfigFile.existsSync()).thenReturn(true);
+    when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
+
     testHelper = TestGenArbCommand();
     testHelper.testFile = testBase.mockConfigFile;
     testHelper.testLibDir = testBase.mockLibDir;
 
-    // Configure ARB files for testing
     mockArbFiles = {
       'en': MockFile(),
       'de': MockFile(),
@@ -73,7 +77,6 @@ void main() {
 
     final basePath = p.normalize('/mock/temp');
 
-    // Setup paths and content for ARB files
     when(testBase.mockLibDir.path).thenReturn(basePath);
     when(testBase.mockConfigFile.readAsStringSync()).thenReturn('''
 base_language: en
@@ -107,36 +110,46 @@ languages:
       'settings': {'volume': 'Volume', 'rotation': 'Rotation'}
     }));
 
-    // Setup writeAsString to return a Future<File>
     when(testBase.mockConfigFile.writeAsString(any))
         .thenAnswer((_) => Future.value(testBase.mockConfigFile));
   });
 
-  group('Configuration handling', () {
-    test('Throws an error if config file is missing', () {
-      when(testBase.mockConfigFile.existsSync()).thenReturn(false);
-
-      testHelper.configureWithArgs([]);
-      testHelper.createCommand();
-
-      expect(
-        testBase.suppressPrints(
-            () => testHelper.runGenArb(testBase.mockLibDir.path)),
-        throwsA(isA<Exception>()),
-      );
+  group('Command configuration', () {
+    test('Has correct name and description', () {
+      final command = GenArbCommand();
+      expect(command.name, equals('gen-arb'));
+      expect(command.description, isNotEmpty);
     });
 
-    test('Throws an error if config file is invalid', () {
+    test('Uses correct config file name', () {
+      expect(GenArbCommand.configFileName, equals('gen_l10n_utils.yaml'));
+    });
+  });
+
+  group('Configuration handling', () {
+    test('Handles invalid YAML content', () async {
       when(testBase.mockConfigFile.readAsStringSync())
-          .thenReturn('invalid yaml content');
+          .thenReturn('invalid: [yaml: content');
+
+      testHelper.configureWithArgs([]);
+      final command = testHelper.createCommand();
+
+      final result = await command.run();
+      expect(result, equals(1));
+    });
+
+    test('Handles invalid config structure', () {
+      when(testBase.mockConfigFile.readAsStringSync())
+          .thenReturn('some: value');
 
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
       expect(
-        testBase.suppressPrints(
-            () => testHelper.runGenArb(testBase.mockLibDir.path)),
-        throwsA(isA<Exception>()),
+        () => testHelper.runGenArb(testBase.mockLibDir.path),
+        throwsA(predicate((e) =>
+            e is Exception &&
+            e.toString().contains('Invalid configuration format'))),
       );
     });
   });
@@ -154,9 +167,7 @@ languages:
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path);
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
@@ -165,17 +176,16 @@ languages:
     });
 
     test('Merges and flattens ARB files correctly', () {
-      // Set up output file mock
       final mockOutputFile = MockFile();
       Map<String, dynamic> capturedEnContent = {};
       Map<String, dynamic> capturedDeContent = {};
 
-      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.path)
+          .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
       when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
         final content = invocation.positionalArguments.first as String;
         final json = jsonDecode(content) as Map<String, dynamic>;
 
-        // Store the content based on what appears to be in it
         if (json.containsKey('settings.title') &&
             json['settings.title'] == 'Settings') {
           capturedEnContent = json;
@@ -185,15 +195,11 @@ languages:
         }
       });
 
-      // Run the test
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
 
-      // Verify the content
       expect(capturedEnContent.isNotEmpty, isTrue);
       expect(capturedDeContent.isNotEmpty, isTrue);
 
@@ -208,37 +214,30 @@ languages:
     });
 
     test('Alphabetically sorts keys in output ARB files', () {
-      // Set up mock ARB files with keys in non-alphabetical order
       when(mockArbFiles['en']!.readAsStringSync()).thenReturn(
           jsonEncode({'zebra': 'Zebra', 'apple': 'Apple', 'banana': 'Banana'}));
 
       testHelper.testArbFiles = [mockArbFiles['en']!];
 
-      // Set up output file mock
       final mockOutputFile = MockFile();
       String? capturedContent;
 
-      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.path)
+          .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
       when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
         capturedContent = invocation.positionalArguments.first as String;
       });
 
-      // Run the test
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
 
-      // Verify the content is sorted
       expect(capturedContent, isNotNull);
       final json = jsonDecode(capturedContent!) as Map<String, dynamic>;
 
-      // Extract keys and check if they're sorted
       final keys = json.keys.toList();
-      expect(keys, equals(['apple', 'banana', 'zebra']),
-          reason: 'Keys should be sorted alphabetically');
+      expect(keys, equals(['apple', 'banana', 'zebra']));
     });
 
     test('Flattens nested JSON structures', () {
@@ -277,9 +276,7 @@ languages:
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path);
 
       verify(mockArbFiles['en']!.readAsStringSync()).called(1);
       verify(mockArbFiles['de']!.readAsStringSync()).called(1);
@@ -293,61 +290,54 @@ languages:
       testHelper.createCommand();
 
       expect(
-        testBase.suppressPrints(
-            () => testHelper.runGenArb(testBase.mockLibDir.path)),
-        throwsA(isA<Exception>()),
+        () => testHelper.runGenArb(testBase.mockLibDir.path),
+        throwsA(predicate((e) =>
+            e is Exception &&
+            e
+                .toString()
+                .contains('No .arb files found for supported languages'))),
       );
     });
 
     test('Detects and correctly handles key conflicts', () {
-      // Set up conflicting ARB files
       final mockConflictFile = MockFile();
       when(mockConflictFile.path).thenReturn(p.join(
           '/mock/temp', 'features', 'settings', 'l10n', 'en', 'conflicts.arb'));
       when(mockConflictFile.existsSync()).thenReturn(true);
       when(mockConflictFile.readAsStringSync()).thenReturn(jsonEncode({
-        'settings.title':
-            'App Settings', // This conflicts with existing "Settings" value
+        'settings.title': 'App Settings',
       }));
 
       testHelper.testArbFiles = [...mockArbFileList, mockConflictFile];
 
-      // Set up to capture content
       final mockOutputFile = MockFile();
       Map<String, dynamic>? capturedEnContent;
 
-      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.path)
+          .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
 
-      // The key issue is here - we need to be able to distinguish between languages in the output
       int writeCount = 0;
       when(mockOutputFile.writeAsStringSync(any)).thenAnswer((invocation) {
         final content = invocation.positionalArguments.first as String;
         final json = jsonDecode(content) as Map<String, dynamic>;
 
-        // For English file only (first write in our test)
         if (writeCount == 0) {
           capturedEnContent = json;
         }
         writeCount++;
       });
 
-      // Execute with conflict detection
       testHelper.configureWithArgs([]);
       final command = testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
 
-      // First occurrence wins - should have "Settings" not "App Settings"
       expect(capturedEnContent, isNotNull);
       expect(capturedEnContent!['settings.title'], equals('Settings'));
 
-      // Test the internal mergeArbFilesWithConflictDetection function directly
       final result = command.mergeArbFilesWithConflictDetection(
           [mockArbFiles['en']!, mockConflictFile]);
 
-      // Verify conflicts were detected
       expect(result.conflicts.isNotEmpty, isTrue);
       expect(result.conflicts.containsKey('settings.title'), isTrue);
       expect(
@@ -359,24 +349,20 @@ languages:
 
   group('Output generation', () {
     test('Writes merged translations to output files', () {
-      // Use a single mock but track writes with a counter
       final mockOutputFile = MockFile();
       int writeCount = 0;
 
-      when(mockOutputFile.path).thenReturn('');
+      when(mockOutputFile.path)
+          .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
       when(mockOutputFile.writeAsStringSync(any)).thenAnswer((_) {
         writeCount++;
       });
 
-      // Run the command
       testHelper.configureWithArgs([]);
       testHelper.createCommand();
 
-      testBase.suppressPrints(() async {
-        await testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
-      });
+      testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
 
-      // Verify we wrote exactly twice (once for each language)
       expect(writeCount, equals(2));
     });
   });

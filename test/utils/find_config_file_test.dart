@@ -7,81 +7,47 @@ import 'dart:io';
 import 'command_test_base_annotations.mocks.dart';
 
 void main() {
-  late MockFile mockAppmindsConfigFile;
-  late MockFile mockAl10nConfigFile;
+  late MockFile mockConfigFile;
   late String mockProjectRoot;
 
   setUp(() {
-    mockAppmindsConfigFile = MockFile();
-    mockAl10nConfigFile = MockFile();
+    mockConfigFile = MockFile();
     mockProjectRoot = '/mock/project';
 
-    // Setup appminds_l10n.yaml
-    when(mockAppmindsConfigFile.path)
-        .thenReturn(p.join(mockProjectRoot, 'appminds_l10n.yaml'));
-
-    // Setup al10n.yaml
-    when(mockAl10nConfigFile.path)
-        .thenReturn(p.join(mockProjectRoot, 'al10n.yaml'));
+    // Setup gen_l10n_utils.yaml
+    when(mockConfigFile.path)
+        .thenReturn(p.join(mockProjectRoot, 'gen_l10n_utils.yaml'));
   });
 
-  test('Finds appminds_l10n.yaml when it exists', () {
-    // Only appminds_l10n.yaml exists
-    when(mockAppmindsConfigFile.existsSync()).thenReturn(true);
-    when(mockAl10nConfigFile.existsSync()).thenReturn(false);
+  test('Finds gen_l10n_utils.yaml when it exists', () {
+    when(mockConfigFile.existsSync()).thenReturn(true);
 
-    // Create a file factory that returns our mocks
+    // Create a file factory that returns our mock
     File fileFactory(String path) {
-      if (path == p.join(mockProjectRoot, 'appminds_l10n.yaml')) {
-        return mockAppmindsConfigFile;
-      } else if (path == p.join(mockProjectRoot, 'al10n.yaml')) {
-        return mockAl10nConfigFile;
+      if (path == p.join(mockProjectRoot, 'gen_l10n_utils.yaml')) {
+        return mockConfigFile;
       }
       throw Exception('Unexpected path: $path');
     }
 
     final result = findConfigFile(mockProjectRoot, fileFactory: fileFactory);
-    expect(result, equals(mockAppmindsConfigFile));
-    verify(mockAppmindsConfigFile.existsSync()).called(1);
+    expect(result, equals(mockConfigFile));
+    verify(mockConfigFile.existsSync()).called(1);
   });
 
-  test('Finds al10n.yaml when appminds_l10n.yaml is missing', () {
-    when(mockAppmindsConfigFile.existsSync()).thenReturn(false);
-    when(mockAl10nConfigFile.existsSync()).thenReturn(true);
+  test('Throws exception when config file does not exist', () {
+    when(mockConfigFile.existsSync()).thenReturn(false);
 
-    // Create a file factory that returns our mocks
+    // Create a file factory that returns our mock
     File fileFactory(String path) {
-      if (path == p.join(mockProjectRoot, 'appminds_l10n.yaml')) {
-        return mockAppmindsConfigFile;
-      } else if (path == p.join(mockProjectRoot, 'al10n.yaml')) {
-        return mockAl10nConfigFile;
-      }
-      throw Exception('Unexpected path: $path');
-    }
-
-    final result = findConfigFile(mockProjectRoot, fileFactory: fileFactory);
-    expect(result, equals(mockAl10nConfigFile));
-    verify(mockAppmindsConfigFile.existsSync()).called(1);
-    verify(mockAl10nConfigFile.existsSync()).called(1);
-  });
-
-  test('Throws exception when no config file exists', () {
-    when(mockAppmindsConfigFile.existsSync()).thenReturn(false);
-    when(mockAl10nConfigFile.existsSync()).thenReturn(false);
-
-    // Create a file factory that returns our mocks
-    File fileFactory(String path) {
-      if (path == p.join(mockProjectRoot, 'appminds_l10n.yaml')) {
-        return mockAppmindsConfigFile;
-      } else if (path == p.join(mockProjectRoot, 'al10n.yaml')) {
-        return mockAl10nConfigFile;
+      if (path == p.join(mockProjectRoot, 'gen_l10n_utils.yaml')) {
+        return mockConfigFile;
       }
       throw Exception('Unexpected path: $path');
     }
 
     expect(() => findConfigFile(mockProjectRoot, fileFactory: fileFactory),
         throwsA(isA<Exception>()));
-    verify(mockAppmindsConfigFile.existsSync()).called(1);
-    verify(mockAl10nConfigFile.existsSync()).called(1);
+    verify(mockConfigFile.existsSync()).called(1);
   });
 }

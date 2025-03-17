@@ -6,7 +6,6 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:mockito/mockito.dart';
 
-// Import the generated mocks
 import 'command_test_base_annotations.mocks.dart';
 
 // Base class for test commands
@@ -51,7 +50,7 @@ class CommandTestBase {
     mockDirs = List.generate(3, (_) => MockDirectory());
 
     // Standard config file setup
-    when(mockConfigFile.path).thenReturn('al10n.yaml');
+    when(mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
     when(mockConfigFile.existsSync()).thenReturn(true);
     when(mockConfigFile.readAsStringSync()).thenReturn('''
 base_language: en
@@ -63,6 +62,14 @@ languages:
     // Standard lib directory setup
     when(mockLibDir.path).thenReturn('/lib');
     when(mockLibDir.existsSync()).thenReturn(true);
+  }
+
+  // Create a mock file with the specified name
+  MockFile setupMockFile(String fileName) {
+    final mockFile = MockFile();
+    when(mockFile.path).thenReturn(fileName);
+    when(mockFile.existsSync()).thenReturn(true);
+    return mockFile;
   }
 
   // Helper to suppress print statements during tests
@@ -93,11 +100,11 @@ languages:
             .thenReturn('/lib/l10n/${languageCodes[i]}/app.arb');
         when(mockFiles[i].readAsString())
             .thenAnswer((_) => Future.value(jsonEncode({
-                  'greeting': 'Hello',
-                  'farewell': 'Goodbye',
-                  '@greeting': {'description': 'Greeting message'},
-                  '@farewell': {'description': 'Farewell message'}
-                })));
+          'greeting': 'Hello',
+          'farewell': 'Goodbye',
+          '@greeting': {'description': 'Greeting message'},
+          '@farewell': {'description': 'Farewell message'}
+        })));
       } else {
         when(mockDirs[i].listSync()).thenReturn([]);
       }
@@ -109,10 +116,10 @@ languages:
 
   // Setup a test command with common mocks
   void setupCommand<T extends TestCommandBase>(
-    T command,
-    List<String> args, {
-    bool hasLanguageDirs = true,
-  }) {
+      T command,
+      List<String> args, {
+        bool hasLanguageDirs = true,
+      }) {
     command.testFile = mockConfigFile;
     command.testLibDir = mockLibDir;
     command.configureWithArgs(args);

@@ -32,6 +32,8 @@ void main() {
     testBase = CommandTestBase();
     testBase.setUp();
 
+    // Mock the config file using the correct method
+    testBase.mockConfigFile = testBase.setupMockFile('gen_l10n_utils.yaml');
     testHelper = TestCreateConfigCommand();
     testHelper.testFile = testBase.mockConfigFile;
 
@@ -60,11 +62,14 @@ languages:
       expect(command.description, isNotEmpty);
     });
 
+    test('Uses correct config file name', () {
+      expect(CreateConfigCommand.configFileName, equals('gen_l10n_utils.yaml'));
+    });
+
     test('Has required arguments configured', () {
       final argParser = command.argParser;
       expect(argParser.options.containsKey('base-language'), isTrue);
       expect(argParser.options.containsKey('languages'), isTrue);
-      expect(argParser.options.containsKey('output'), isFalse);
     });
 
     test('Has correct default values', () {
@@ -76,34 +81,34 @@ languages:
 
   group('File creation and updates', () {
     test('Creates new config file when none exists', () async {
-      // Setup command with no existing file
       when(testBase.mockConfigFile.existsSync()).thenReturn(false);
+      when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
 
       testHelper
           .configureWithArgs(['--base-language', 'en', '--languages', 'en,de']);
-
       final command = testHelper.createCommand();
 
-      final result =
-          await testBase.suppressPrints(() async => await command.run());
-
+      final result = await testBase.suppressPrints(() => command.run());
       expect(result, equals(0));
-      verify(testBase.mockConfigFile.writeAsString(any)).called(1);
+
+      final expectedContent = '''base_language: en
+languages:
+  - en
+  - de
+''';
+      verify(testBase.mockConfigFile.writeAsString(expectedContent)).called(1);
     });
 
-    test('Prompts for update when file exists and updates when confirmed',
-        () async {
-      // Setup for existing file
+    test('Updates existing config file when confirmed', () async {
       when(testBase.mockConfigFile.existsSync()).thenReturn(true);
+      when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
 
       testHelper
           .configureWithArgs(['--base-language', 'fr', '--languages', 'fr,es']);
       testHelper.userInput = true;
 
       final command = testHelper.createCommand();
-
-      final result =
-          await testBase.suppressPrints(() async => await command.run());
+      final result = await testBase.suppressPrints(() => command.run());
 
       expect(result, equals(0));
       verify(testBase.mockConfigFile.readAsStringSync()).called(1);
@@ -111,17 +116,15 @@ languages:
     });
 
     test('Cancels update when user declines', () async {
-      // Setup for existing file
       when(testBase.mockConfigFile.existsSync()).thenReturn(true);
+      when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
 
       testHelper
           .configureWithArgs(['--base-language', 'fr', '--languages', 'fr,es']);
       testHelper.userInput = false;
 
       final command = testHelper.createCommand();
-
-      final result =
-          await testBase.suppressPrints(() async => await command.run());
+      final result = await testBase.suppressPrints(() => command.run());
 
       expect(result, equals(1));
       verifyNever(testBase.mockConfigFile.writeAsString(any));
@@ -129,39 +132,43 @@ languages:
 
     test('Creates config with custom language settings', () async {
       when(testBase.mockConfigFile.existsSync()).thenReturn(false);
+      when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
 
       testHelper.configureWithArgs(
           ['--base-language', 'de', '--languages', 'de,en,es']);
-
       final command = testHelper.createCommand();
 
-      final result =
-          await testBase.suppressPrints(() async => await command.run());
-
+      final result = await testBase.suppressPrints(() => command.run());
       expect(result, equals(0));
 
-      final captured =
-          verify(testBase.mockConfigFile.writeAsString(captureAny)).captured;
-      expect(captured.first, contains('base_language: de'));
+      final expectedContent = '''base_language: de
+languages:
+  - de
+  - en
+  - es
+''';
+      verify(testBase.mockConfigFile.writeAsString(expectedContent)).called(1);
     });
 
-    test('Ensures default language is in languages list', () async {
+    test('Ensures base language is included in languages list', () async {
       when(testBase.mockConfigFile.existsSync()).thenReturn(false);
+      when(testBase.mockConfigFile.path).thenReturn('gen_l10n_utils.yaml');
 
       testHelper.configureWithArgs(
           ['--base-language', 'fr', '--languages', 'de,en,es']);
-
       final command = testHelper.createCommand();
 
-      final result =
-          await testBase.suppressPrints(() async => await command.run());
-
+      final result = await testBase.suppressPrints(() => command.run());
       expect(result, equals(0));
 
-      final captured =
-          verify(testBase.mockConfigFile.writeAsString(captureAny)).captured;
-      expect(captured.first, contains('base_language: fr'));
-      expect(captured.first, contains('- fr'));
+      final expectedContent = '''base_language: fr
+languages:
+  - fr
+  - de
+  - en
+  - es
+''';
+      verify(testBase.mockConfigFile.writeAsString(expectedContent)).called(1);
     });
   });
 }

@@ -33,12 +33,22 @@ class GenArbCommand extends Command<int> {
   final description =
       'Generates ARB files based on the localization configuration';
 
+  static const configFileName = 'gen_l10n_utils.yaml';
+
   @override
   Future<int> run() async {
     final currentDir = Directory.current.path;
 
     try {
-      final configFilePath = findConfigFile(currentDir);
+      // Try to find the config file first
+      File? configFile;
+      try {
+        configFile = findConfigFile(currentDir);
+      } catch (e) {
+        stderr.writeln(
+            '❌ Error: Configuration file $configFileName not found. Run create-config command first.');
+        return 1;
+      }
 
       // Find ARB files
       final arbFiles = Directory(currentDir)
@@ -48,7 +58,7 @@ class GenArbCommand extends Command<int> {
           .toList();
 
       try {
-        genArb(currentDir, configFilePath, arbFiles);
+        genArb(currentDir, configFile, arbFiles);
         return 0;
       } catch (e) {
         stderr.writeln(e.toString());
@@ -76,7 +86,6 @@ class GenArbCommand extends Command<int> {
         for (var lang in supportedLanguages) lang: []
       };
 
-      // Revised language detection - check directory path instead of filename
       for (final file in arbFiles) {
         // Split the path and look for language directory
         final pathSegments = p.split(file.path);

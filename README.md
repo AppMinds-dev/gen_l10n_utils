@@ -185,4 +185,9 @@ languages:
 ## License
 
 BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
-```
+
+Todo's:
+
+- impklement github actions
+- fix translate_command_test.dart
+- 
