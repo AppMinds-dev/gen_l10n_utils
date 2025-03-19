@@ -7,7 +7,7 @@ A command-line utility for managing Dart/Flutter app localizations with enhanced
 - Find and merge ARB files from multiple directories
 - Generate simplified ARB files for Flutter localization
 - Generate metadata-rich ARB files for export
-- Export to XLIFF and JSON formats with full metadata preservation
+- Export to **XLIFF**, **JSON**, and **PO** formats with full metadata preservation
 - Automatic conflict detection and resolution
 - Support for nested JSON structures
 - Configurable via YAML
@@ -17,15 +17,15 @@ A command-line utility for managing Dart/Flutter app localizations with enhanced
 - `create-config`: Creates a configuration file in your project root
 - `gen-arb`: Generates and merges ARB files from your project
 - `translate`: Creates or updates translation files for specific languages
-- `export`: Exports ARB files to XLIFF or JSON format with metadata preservation
-- 
+- `export`: Exports ARB files to XLIFF, JSON, or PO format with metadata preservation
+
 ## Installation
 
 Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.2.0
+  gen_l10n_utils: ^1.3.0
 ```
 
 Or install it globally:
@@ -138,6 +138,8 @@ dart run gen_l10n_utils export
 dart run gen_l10n_utils export --format xlf
 # or
 dart run gen_l10n_utils export -f json
+# or
+dart run gen_l10n_utils export -f po
 
 # Export specific languages
 dart run gen_l10n_utils export --language en,fr,de
@@ -195,13 +197,36 @@ Example JSON output (`lib/l10n/json/app_de.json`):
 }
 ```
 
+Example PO output (`lib/l10n/po/app_de.po`):
+```po
+msgid ""
+msgstr ""
+"Project-Id-Version: gen_l10n_utils\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# A welcome message with the user's name
+#. Placeholder: username
+#. Type: String
+#. Example: John Doe
+#. Description: The user's display name
+#: greeting
+msgctxt "greeting"
+msgid "Welcome, {username}!"
+msgstr "Willkommen, {username}!"
+```
+
 Options:
-- `--format` or `-f`: Output format (currently supported: `xlf`, `json`)
+- `--format` or `-f`: Output format (currently supported: `xlf`, `json`, `po`)
 - `--language` or `-l`: Specific language(s) to export (comma-separated)
 
 Currently supported export formats:
 - `xlf`: XLIFF 1.2 format for translation tools with full metadata preservation
 - `json`: Simplified JSON format with metadata structured for easy processing
+- `po`: Gettext PO format with comments for metadata preservation
 
 ## Directory Structure Requirements
 

@@ -1,7 +1,41 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
+import 'package:gen_l10n_utils/src/utils/export/format_converter.dart';
 
-class XliffConverter {
+class XliffConverter implements FormatConverter {
+  @override
+  void convert({
+    required String baseLanguage,
+    required List<String> languages,
+    required String inputDir,
+    required String outputDir,
+  }) {
+    final baseContent = _readArbFile(
+      path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
+    );
+
+    for (final language in languages) {
+      if (language == baseLanguage) continue;
+
+      final targetContent = _readArbFile(
+        path.join(inputDir, 'metadata', 'app_${language}_metadata.arb'),
+      );
+
+      final xliff = convertToXliff(
+        sourceLanguage: baseLanguage,
+        targetLanguage: language,
+        sourceContent: baseContent,
+        targetContent: targetContent,
+      );
+
+      final outputPath = path.join(outputDir, 'xlf', 'app_$language.xlf');
+      _ensureDirectoryExists(outputPath);
+      saveToFile(xliff, outputPath);
+    }
+  }
+
   /// Converts ARB content to XLIFF format
   XmlDocument convertToXliff({
     required String sourceLanguage,
@@ -114,5 +148,20 @@ class XliffConverter {
   void saveToFile(XmlDocument xliff, String outputPath) {
     final file = File(outputPath);
     file.writeAsStringSync(xliff.toXmlString(pretty: true));
+  }
+
+  Map<String, dynamic> _readArbFile(String filePath) {
+    final file = File(filePath);
+    if (!file.existsSync()) {
+      throw Exception('File not found: $filePath');
+    }
+    return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+  }
+
+  void _ensureDirectoryExists(String filePath) {
+    final directory = path.dirname(filePath);
+    if (!Directory(directory).existsSync()) {
+      Directory(directory).createSync(recursive: true);
+    }
   }
 }

@@ -1,83 +1,89 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:path/path.dart' as path;
+import 'package:gen_l10n_utils/src/utils/export/format_converter.dart';
 import 'package:gen_l10n_utils/src/utils/export/xliff_converter.dart';
 import 'package:gen_l10n_utils/src/utils/export/json_converter.dart';
+import 'package:gen_l10n_utils/src/utils/export/po_converter.dart';
 
 class ArbConverter {
-  final xliffConverter = XliffConverter();
-  final jsonConverter = JsonConverter();
+  final Map<String, FormatConverter> _converters = {
+    'xlf': XliffConverter(),
+    'json': JsonConverter(),
+    'po': PoConverter(),
+  };
 
+  /// Converts ARB files to the specified format
+  void convert({
+    required String format,
+    required String baseLanguage,
+    required List<String> languages,
+    required String inputDir,
+    required String outputDir,
+  }) {
+    final converter = _converters[format];
+    if (converter == null) {
+      throw FormatException(
+        'Unsupported format: $format. Supported formats: ${supportedFormats.join(", ")}',
+      );
+    }
+
+    converter.convert(
+      baseLanguage: baseLanguage,
+      languages: languages,
+      inputDir: inputDir,
+      outputDir: outputDir,
+    );
+  }
+
+  /// Returns a list of supported export formats
+  List<String> get supportedFormats => _converters.keys.toList();
+
+  /// For backward compatibility - use convert() instead
+  @Deprecated('Use convert() with format="xlf" instead')
   void convertToXlf({
     required String baseLanguage,
     required List<String> languages,
     required String inputDir,
     required String outputDir,
   }) {
-    final baseContent = _readArbFile(
-      path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
+    convert(
+      format: 'xlf',
+      baseLanguage: baseLanguage,
+      languages: languages,
+      inputDir: inputDir,
+      outputDir: outputDir,
     );
-
-    for (final language in languages) {
-      if (language == baseLanguage) continue;
-
-      final targetContent = _readArbFile(
-        path.join(inputDir, 'metadata', 'app_${language}_metadata.arb'),
-      );
-
-      final xliff = xliffConverter.convertToXliff(
-        sourceLanguage: baseLanguage,
-        targetLanguage: language,
-        sourceContent: baseContent,
-        targetContent: targetContent,
-      );
-
-      final outputPath = path.join(outputDir, 'xlf', 'app_$language.xlf');
-      _ensureDirectoryExists(outputPath);
-      xliffConverter.saveToFile(xliff, outputPath);
-    }
   }
 
+  /// For backward compatibility - use convert() instead
+  @Deprecated('Use convert() with format="json" instead')
   void convertToJson({
     required String baseLanguage,
     required List<String> languages,
     required String inputDir,
     required String outputDir,
   }) {
-    final baseContent = _readArbFile(
-      path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
+    convert(
+      format: 'json',
+      baseLanguage: baseLanguage,
+      languages: languages,
+      inputDir: inputDir,
+      outputDir: outputDir,
     );
-
-    for (final language in languages) {
-      if (language == baseLanguage) continue;
-
-      final targetContent = _readArbFile(
-        path.join(inputDir, 'metadata', 'app_${language}_metadata.arb'),
-      );
-
-      final json = jsonConverter.convertToJson(
-        sourceContent: baseContent,
-        targetContent: targetContent,
-      );
-
-      final outputPath = path.join(outputDir, 'json', 'app_$language.json');
-      _ensureDirectoryExists(outputPath);
-      jsonConverter.saveToFile(json, outputPath);
-    }
   }
 
-  Map<String, dynamic> _readArbFile(String filePath) {
-    final file = File(filePath);
-    if (!file.existsSync()) {
-      throw Exception('File not found: $filePath');
-    }
-    return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-  }
-
-  void _ensureDirectoryExists(String filePath) {
-    final directory = path.dirname(filePath);
-    if (!Directory(directory).existsSync()) {
-      Directory(directory).createSync(recursive: true);
-    }
+  /// For backward compatibility - use convert() instead
+  @Deprecated('Use convert() with format="po" instead')
+  void convertToPo({
+    required String baseLanguage,
+    required List<String> languages,
+    required String inputDir,
+    required String outputDir,
+  }) {
+    convert(
+      format: 'po',
+      baseLanguage: baseLanguage,
+      languages: languages,
+      inputDir: inputDir,
+      outputDir: outputDir,
+    );
   }
 }
