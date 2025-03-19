@@ -31,6 +31,11 @@ class CreateConfigCommand extends Command<int> {
       defaultsTo: ['en'],
       splitCommas: true,
     );
+    argParser.addOption(
+      'export-format',
+      abbr: 'f',
+      help: 'Default export format for translations (e.g., xlf)',
+    );
   }
 
   bool _askUserConfirmation(String message) {
@@ -47,6 +52,7 @@ class CreateConfigCommand extends Command<int> {
       final args = testMode ? testArgResults : argResults;
       final baseLanguage = args?['base-language'] as String;
       final languages = args?['languages'] as List<String>;
+      final exportFormat = args?['export-format'] as String?;
 
       if (!languages.contains(baseLanguage)) {
         languages.insert(0, baseLanguage);
@@ -77,6 +83,11 @@ class CreateConfigCommand extends Command<int> {
         yamlEditor.update(['base_language'], baseLanguage);
         yamlEditor.update(['languages'], languages);
 
+        // Only update export_format if provided
+        if (exportFormat != null) {
+          yamlEditor.update(['export_format'], exportFormat);
+        }
+
         await configFile.writeAsString(yamlEditor.toString());
         print('✅  Updated configuration file: ${configFile.path}');
         return 0;
@@ -87,10 +98,15 @@ class CreateConfigCommand extends Command<int> {
           testMode ? (testFile ?? File(configFileName)) : File(configFileName);
 
       // Create YAML content directly
-      final yamlContent = '''base_language: $baseLanguage
+      var yamlContent = '''base_language: $baseLanguage
 languages:
 ${languages.map((lang) => '  - $lang').join('\n')}
 ''';
+
+      // Add export_format if provided
+      if (exportFormat != null) {
+        yamlContent += 'export_format: $exportFormat\n';
+      }
 
       await newFile.writeAsString(yamlContent);
       print('✅  Created configuration file: ${newFile.path}');

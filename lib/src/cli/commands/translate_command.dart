@@ -34,7 +34,6 @@ class TranslateCommand extends Command<int> {
       'language',
       abbr: 'l',
       help: 'The language code to create translations for',
-      mandatory: false,
     );
   }
 

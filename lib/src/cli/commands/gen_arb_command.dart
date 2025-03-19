@@ -70,7 +70,6 @@ class GenArbCommand extends Command<int> {
     }
   }
 
-  /// Generates merged ARB files for supported languages
   void genArb(String projectRoot, File configFile, List<File> arbFiles,
       {File? mockOutputFile}) {
     try {
@@ -82,19 +81,21 @@ class GenArbCommand extends Command<int> {
         outputDir.createSync(recursive: true);
       }
 
+      // Create metadata directory
+      final metadataDir = Directory(p.join(outputDir.path, 'metadata'));
+      if (!metadataDir.existsSync()) {
+        metadataDir.createSync(recursive: true);
+      }
+
       final Map<String, List<File>> languageFiles = {
         for (var lang in supportedLanguages) lang: []
       };
 
       for (final file in arbFiles) {
-        // Split the path and look for language directory
         final pathSegments = p.split(file.path);
-
-        // Find if any path segment matches a supported language
         for (final lang in supportedLanguages) {
           if (pathSegments.contains(lang)) {
             languageFiles[lang]!.add(file);
-            // Once we've found a match, move to the next file
             break;
           }
         }
@@ -109,22 +110,33 @@ class GenArbCommand extends Command<int> {
         if (languageFiles[lang]!.isNotEmpty) {
           final result =
               mergeArbFilesWithConflictDetection(languageFiles[lang]!);
-          final mergedContent = result.content;
 
-          // Sort the keys alphabetically
-          final sortedContent = _sortMapByKeys(mergedContent);
+          // Generate simplified version (just translations)
+          final simplifiedContent = _createSimplifiedArb(result.content);
+          final sortedSimplified = _sortMapByKeys(simplifiedContent);
 
+          // Generate metadata version
+          final metadataContent = _createMetadataArb(result.content);
+          final sortedMetadata = _sortMapByKeys(metadataContent);
+
+          // Write simplified version
           final outputFile =
               mockOutputFile ?? File(p.join(outputDir.path, 'app_$lang.arb'));
-
           outputFile.writeAsStringSync(
-            const JsonEncoder.withIndent("  ").convert(sortedContent),
+            const JsonEncoder.withIndent("  ").convert(sortedSimplified),
           );
 
-          print(
-              '✅  Translations merged: ${languageFiles[lang]!.length} files for "$lang" → ${outputFile.path}');
+          // Write metadata version
+          final metadataFile =
+              File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
+          metadataFile.writeAsStringSync(
+            const JsonEncoder.withIndent("  ").convert(sortedMetadata),
+          );
 
-          // Report conflicts for this language
+          print('✅  Generated files for "$lang":');
+          print('   → ${outputFile.path} (simplified)');
+          print('   → ${metadataFile.path} (with metadata)');
+
           if (result.conflicts.isNotEmpty) {
             reportConflicts(result.conflicts, lang);
           }
@@ -137,12 +149,65 @@ class GenArbCommand extends Command<int> {
     }
   }
 
-  /// Merges multiple .arb files into a single JSON structure with flattened keys
-  /// and detects conflicts
+  Map<String, dynamic> _createSimplifiedArb(Map<String, dynamic> content) {
+    final simplified = <String, dynamic>{};
+
+    content.forEach((key, value) {
+      if (!key.contains('.')) {
+        simplified[key] = value;
+      }
+    });
+
+    return simplified;
+  }
+
+  Map<String, dynamic> _createMetadataArb(Map<String, dynamic> content) {
+    final metadata = <String, dynamic>{};
+
+    // Process all keys to build proper metadata structure
+    content.forEach((key, value) {
+      if (!key.contains('.')) {
+        // Handle base translation keys
+        metadata[key] = value;
+      } else if (key.startsWith('@')) {
+        // Handle metadata
+        final parts = key.split('.');
+        final baseKey = parts[0].substring(1); // Remove @ from start
+
+        if (!metadata.containsKey('@$baseKey')) {
+          metadata['@$baseKey'] = {
+            'description': '',
+            'placeholders': {},
+          };
+        }
+
+        if (parts.length > 2 && parts[1] == 'placeholders') {
+          // Handle placeholder metadata
+          final placeholder = parts[2];
+          final property = parts.length > 3 ? parts[3] : null;
+
+          if (!metadata['@$baseKey']['placeholders'].containsKey(placeholder)) {
+            metadata['@$baseKey']['placeholders'][placeholder] = {};
+          }
+
+          if (property != null) {
+            metadata['@$baseKey']['placeholders'][placeholder][property] =
+                value;
+          }
+        } else if (parts.length == 2 && parts[1] == 'description') {
+          // Handle description
+          metadata['@$baseKey']['description'] = value;
+        }
+      }
+    });
+
+    return metadata;
+  }
+
   MergeResult mergeArbFilesWithConflictDetection(List<File> arbFiles) {
     final mergedContent = <String, dynamic>{};
     final conflicts = <String, List<ConflictEntry>>{};
-    final keySourceFiles = <String, String>{}; // Track where each key came from
+    final keySourceFiles = <String, String>{};
 
     for (final file in arbFiles) {
       final content = file.readAsStringSync();
@@ -150,15 +215,12 @@ class GenArbCommand extends Command<int> {
         final jsonContent = jsonDecode(content) as Map<String, dynamic>;
         final flattened = flattenJson(jsonContent);
 
-        // Check for conflicts while merging
         for (final entry in flattened.entries) {
           final key = entry.key;
           final value = entry.value;
 
           if (mergedContent.containsKey(key)) {
-            // If the key already exists with a different value
             if (mergedContent[key] != value) {
-              // Track conflict
               conflicts.putIfAbsent(key, () => []).add(
                     ConflictEntry(
                       file.path,
@@ -167,15 +229,12 @@ class GenArbCommand extends Command<int> {
                       keySourceFiles[key] ?? 'unknown source',
                     ),
                   );
-              // First occurrence wins (don't overwrite)
               continue;
             }
           } else {
-            // Store the source file for this key for later conflict reporting
             keySourceFiles[key] = file.path;
           }
 
-          // Add entry (only if it doesn't exist yet or has the same value)
           mergedContent[key] = value;
         }
       } catch (e) {
@@ -186,7 +245,6 @@ class GenArbCommand extends Command<int> {
     return MergeResult(mergedContent, conflicts);
   }
 
-  /// Report conflicts to the user
   void reportConflicts(
       Map<String, List<ConflictEntry>> conflicts, String language) {
     print(
@@ -207,13 +265,10 @@ class GenArbCommand extends Command<int> {
     print('\nFirst occurrence of each key was used in the merged files.\n');
   }
 
-  /// Merges multiple .arb files into a single JSON structure with flattened keys
-  /// Legacy method kept for backward compatibility
   Map<String, dynamic> mergeArbFiles(List<File> arbFiles) {
     return mergeArbFilesWithConflictDetection(arbFiles).content;
   }
 
-  /// Flattens nested JSON objects into dot notation
   Map<String, dynamic> flattenJson(Map<String, dynamic> json,
       {String prefix = ''}) {
     final result = <String, dynamic>{};
@@ -222,10 +277,8 @@ class GenArbCommand extends Command<int> {
       final newKey = prefix.isEmpty ? key : '$prefix.$key';
 
       if (value is Map<String, dynamic>) {
-        // Recursively flatten nested objects
         result.addAll(flattenJson(value, prefix: newKey));
       } else {
-        // Add leaf nodes directly
         result[newKey] = value;
       }
     });
@@ -233,7 +286,6 @@ class GenArbCommand extends Command<int> {
     return result;
   }
 
-  /// Sorts a map by its keys alphabetically
   Map<String, dynamic> _sortMapByKeys(Map<String, dynamic> map) {
     final sortedKeys = map.keys.toList()..sort();
     final sortedMap = <String, dynamic>{};

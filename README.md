@@ -1,38 +1,24 @@
 # gen_l10n_utils
 
-A command-line tool for managing Flutter application localization resources.
-
-## Overview
-
-Here's a quick overview of the available commands:
-
--   `create-config`: Creates a configuration file (`gen_l10n_utils.yaml`) in your project's root directory.
--   `translate`: Creates or updates translation files for specified languages based on the base language.
--   `gen-arb`: Generates ARB files by merging translation files from your project.
+A command-line utility for managing Flutter app localizations with enhanced features for metadata handling and export capabilities.
 
 ## Features
 
--   **Configuration Management**: Create and update localization configuration files
--   **ARB Generation**: Generate ARB (Application Resource Bundle) files for translations
--   **Language Support**: Configure multiple languages with a default language
--   **Simple CLI Interface**: Easy-to-use commands with helpful options
--   **Nested JSON Support**: Merge nested JSON structures into flat dot notation
--   **Duplicate Key Detection**: Automatically detect and resolve duplicate translation keys within each language
--   **Translation Management**: Create or update translation files for a specific language based on the base language
+- Find and merge ARB files from multiple directories
+- Generate simplified ARB files for Flutter localization
+- Generate metadata-rich ARB files for export
+- Export to XLIFF format with full metadata preservation
+- Automatic conflict detection and resolution
+- Support for nested JSON structures
+- Configurable via YAML
 
 ## Installation
 
-Add the package to your `pubspec.yaml`:
+Add the package to your `pubspec.yaml` file:
 
 ```yaml
-dependencies:
-  gen_l10n_utils: ^1.0.4
-```
-
-Or install it in your project:
-
-```bash
-dart pub add gen_l10n_utils
+dev_dependencies:
+  gen_l10n_utils: ^1.1.0
 ```
 
 Or install it globally:
@@ -41,36 +27,23 @@ Or install it globally:
 dart pub global activate gen_l10n_utils
 ```
 
-## Usage
+## Commands
 
-> **Note:** A configuration file (`gen_l10n_utils.yaml`) is required at your project's root level.
-
-### Creating a configuration file `gen_l10n_utils create-config`
+### Creating Configuration `gen_l10n_utils create-config`
 
 ```bash
-dart run gen_l10n_utils create-config --base-language en --languages en,de,fr
-# or
-dart run gen_l10n_utils create-config -b en -l en,de,fr
+dart run gen_l10n_utils create-config
 ```
 
-This creates an `gen_l10n_utils.yaml` file in your project root with your specified languages:
+This command:
+- Creates a configuration file (`gen_l10n_utils.yaml`) in your project root
+- Allows you to specify supported languages and export preferences
+- Sets up the base configuration for the tool
 
-```yaml
-base_language: en
-languages:
-  - en
-  - de
-  - fr
-```
-
-Options:
-
--   `--base-language` or `-b`: Base language code (ISO 639-1) \[default: \*\*en\*\*]
--   `--languages` or `-l`: Language codes to support (comma separated) \[default: \*\*en\*\*]
-
-### Translating ARB files `gen_l10n_utils translate`
+### Translating Files `gen_l10n_utils translate`
 
 ```bash
+# Translate all languages
 dart run gen_l10n_utils translate
 # or
 dart run gen_l10n_utils translate --language fr
@@ -79,122 +52,177 @@ dart run gen_l10n_utils translate -l fr
 ```
 
 This command:
-
--   Creates or updates translation files for a specific language based on the base language.
--   Adds missing keys from the base language to the target language files.
--   Removes keys from the target language files that no longer exist in the base language files.
--   Can automatically add the language to the config file if it is not already present.
--   If no language is specified, the command will run for all languages defined in the configuration file.
--   ℹ️ Displays the language currently being processed in the console output.
+- Creates or updates translation files for a specific language based on the base language
+- Adds missing keys from the base language to the target language files
+- Removes keys from the target language files that no longer exist in the base language files
+- Can automatically add the language to the config file if not already present
+- Displays the language currently being processed in the console output
 
 Options:
+- `--language` or `-l`: The language code to create translations for (optional)
 
--   `--language` or `-l`: The language code to create translations for (optional). If not specified, all languages in the config will be processed.
-
-### Generating ARB files `gen_l10n_utils gen-arb`
+### Generating ARB Files `gen_l10n_utils gen-arb`
 
 ```bash
 dart run gen_l10n_utils gen-arb
 ```
 
 This command:
+- Finds all .arb files in your project
+- Detects languages based on directory paths
+- Generates two versions of ARB files for each language:
+    1. Simplified version (`app_*.arb`) with just translations
+    2. Metadata version (`metadata/app_*_metadata.arb`) with full metadata structure
+- Merges translations into combined ARB files in the `lib/l10n` directory
+- Detects duplicate keys within each language and resolves conflicts (first occurrence wins)
 
--   Finds all .arb files in your project
--   Detects languages based on directory paths
--   Merges translations into combined ARB files (app\_en.arb, etc.) in the `lib/l10n` directory
--   Detects duplicate keys within each language and resolves conflicts (first occurrence wins)
-
-The command automatically:
-
--   Identifies language by checking directory paths containing language codes
--   Merges multiple ARB files for the same language
--   Detects and reports duplicate key conflicts within each language
--   Creates output files in the `lib/l10n` directory
-
-### Generating Flutter Localization Files
-
-After running `gen_l10n_utils gen-arb` to create your merged ARB files, you need to run Flutter's localization code generation tool to create the Dart classes:
-
-```bash
-flutter gen-l10n
+Example output structure:
+```
+lib/l10n/
+├── app_en.arb           # Simplified English translations
+├── app_de.arb           # Simplified German translations
+└── metadata/
+    ├── app_en_metadata.arb  # English with metadata
+    └── app_de_metadata.arb  # German with metadata
 ```
 
-This command will process the ARB files in your `lib/l10n` directory and generate the necessary Dart code according to your Flutter project's configuration.
+Example input ARB file with metadata:
+```json
+{
+  "@greeting.description": "A welcome message with the user's name",
+  "@greeting.placeholders.username.description": "The user's display name",
+  "@greeting.placeholders.username.example": "John Doe",
+  "@greeting.placeholders.username.type": "String",
+  "greeting": "Welcome, {username}!"
+}
+```
 
-Alternatively, if you're using the `flutter_localizations` package with `generate: true` in your `pubspec.yaml`, this generation will happen automatically when you build or run your app.
+Generated simplified ARB (`app_en.arb`):
+```json
+{
+  "greeting": "Welcome, {username}!"
+}
+```
 
-For more information on Flutter's internationalization system, see the \[official documentation](https://docs.flutter.dev/development/accessibility-and-localization/internationalization).
+Generated metadata ARB (`metadata/app_en_metadata.arb`):
+```json
+{
+  "greeting": "Welcome, {username}!",
+  "@greeting": {
+    "description": "A welcome message with the user's name",
+    "placeholders": {
+      "username": {
+        "type": "String",
+        "example": "John Doe",
+        "description": "The user's display name"
+      }
+    }
+  }
+}
+```
+
+### Exporting ARB Files `gen_l10n_utils export`
+
+```bash
+# Export to the default format (xlf or as specified in config)
+dart run gen_l10n_utils export
+
+# Export to a specific format
+dart run gen_l10n_utils export --target=xlf
+
+# Export specific languages
+dart run gen_l10n_utils export --language=en,fr,de
+```
+
+This command:
+- Uses the metadata version of ARB files for export
+- Converts ARB files to the specified format (default is XLIFF/xlf)
+- Preserves all metadata including descriptions and placeholders
+- Creates target files in `lib/l10n/<format>/` directory
+- Can export all languages or specific languages
+- Will generate ARB files if they don't exist (after confirmation)
+
+Example XLIFF output (`lib/l10n/xlf/app_de.xlf`):
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" target-language="de" datatype="plaintext" original="messages">
+    <header>
+      <tool tool-id="gen_l10n_utils" tool-name="gen_l10n_utils"/>
+    </header>
+    <body>
+      <trans-unit id="greeting">
+        <source>Welcome, {username}!</source>
+        <target>Willkommen, {username}!</target>
+        <note priority="1">A welcome message with the user's name</note>
+        <note from="placeholder" name="username">Type: String, Example: John Doe, Description: The user's display name</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
+```
+
+Options:
+- `--target` or `-t`: Output format (currently supported: `xlf`)
+- `--language` or `-l`: Specific language(s) to export (comma-separated)
+
+Currently supported export formats:
+- `xlf`: XLIFF 1.2 format for translation tools with full metadata preservation
 
 ## Directory Structure Requirements
 
 This package works with any common Flutter project structure, as long as your translation files follow these rules:
 
--   All \`.arb\` files must be within the \`/lib\` folder
--   Files must be placed in language-specific directories matching the ISO language codes from your config
--   The directory path must include the language code (e.g., \`/en/\`, \`/de/\`, etc.)
+- All `.arb` files must be within the `/lib` folder
+- Files must be placed in language-specific directories matching the ISO language codes from your config
+- The directory path must include the language code (e.g., `/en/`, `/de/`, etc.)
 
 Examples of supported structures:
-
--   `lib/features/feature1/l10n/en/translations.arb`
--   `lib/core/l10n/en/common.arb`
--   `lib/modules/auth/assets/en/auth_strings.arb`
--   `lib/en/app_translations.arb`
+- `lib/features/feature1/l10n/en/translations.arb`
+- `lib/core/l10n/en/common.arb`
+- `lib/modules/auth/assets/en/auth_strings.arb`
+- `lib/en/app_translations.arb`
 
 The tool will:
+1. Find all `.arb` files under `/lib`
+2. Determine the language by checking directory paths
+3. Merge all files for each language
+4. Generate two versions:
+    - Simple translations (`app_[lang].arb`) -> Used by flutter_localizations
+    - Full metadata version (`metadata/app_[lang]_metadata.arb`) -> Used for export
+5. Place generated files in the `lib/l10n` directory
 
-1.  Find all \`.arb\` files under \`/lib\`
-2.  Determine the language by checking directory paths
-3.  Merge all files for each language
-4.  Generate combined output files named `app_[lang].arb` (e.g., `app_en.arb`, `app_de.arb`)
-5.  Place generated files in the `lib/l10n` directory
+## Configuration
 
-## Duplicate Key Detection
+The `gen_l10n_utils.yaml` configuration file supports the following options:
 
-When merging multiple ARB files for the same language, the tool automatically detects duplicate keys with different values. When duplicates are found:
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `base_language` | String | Base language to use as source for translations | `en` |
+| `languages` | List\<String\> | List of supported language codes | `['en']` |
+| `export_format` | String | Default format for exporting translations | `xlf` |
 
--   The first occurrence of each key is used in the final output
--   A warning is displayed showing all conflicts detected
--   Each conflict report shows the source files and values involved
+### Configuration File Example
 
-Example warning:
+```yaml
+# Base language used as the source for translations
+base_language: en
 
+# All supported languages in your project
+languages:
+  - en
+  - de
+  - fr
+  - es
+  - ja
+
+# Default format for exporting translations
+export_format: xlf
 ```
-
-⚠️ Warning: Found 1 key conflicts in en files:
-
-Key "settings.title" has conflicts:
-
-Used value: "Settings" from lib/features/settings/l10n/en/settings.arb
-
-Ignored value: "App Settings" from lib/features/app/l10n/en/app.arb
-
-First occurrence of each key was used in the merged files.
-
-```
-
-## Nested JSON Support
-
-This tool allows you to use nested JSON structures in your translation files, which makes organization easier. When merging files, the tool will appropriately handle these structures and produce properly formatted ARB files compatible with Flutter's localization system.
-
-For example, you can organize your translations like this:
-
-```json
-{
-    "auth": {
-        "buttons": {
-            "login": "Login",
-            "register": "Register"
-        },
-        "forgotPassword": "Forgot Password"
-    }
-}
-```
-
-The tool will merge and maintain these nested structures in the final output files, enabling you to keep your translations organized by feature or section.
 
 ## Integration with Flutter Localization
 
-The generated ARB files are compatible with Flutter's \[flutter\_localizations](https://api.flutter.dev/flutter/flutter_localizations-library.html) package and the \[gen\_l10n](https://pub.dev/packages/intl_translation) tool.
+The generated simplified ARB files are compatible with Flutter's [flutter_localizations](https://api.flutter.dev/flutter/flutter_localizations-library.html) package and the [gen_l10n](https://pub.dev/packages/intl_translation) tool.
 
 After generating your ARB files, you can use them with Flutter's localization system by configuring your `pubspec.yaml`:
 
@@ -215,18 +243,6 @@ flutter_intl:
   output_dir: lib/generated
 ```
 
-## Configuration
-
-The package requires `gen_l10n_utils.yaml` in your project root:
-
-```yaml
-base_language: en
-languages:
-  - en
-  - de
-  - fr
-```
-
 ## License
 
-BSD 3-Clause License - see the \[LICENSE](LICENSE) file for details.
+BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
