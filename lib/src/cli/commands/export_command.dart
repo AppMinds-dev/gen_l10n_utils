@@ -19,7 +19,7 @@ class ExportCommand extends Command<int> {
       'format',
       abbr: 'f',
       help:
-          'Output format (xlf, json, etc.). If not specified, uses the format from config or defaults to xlf.',
+          'Output format (xlf, json, po). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
@@ -37,15 +37,13 @@ class ExportCommand extends Command<int> {
 
     // Find config file to get languages and potentially the default format
     final projectRoot = Directory.current.path;
-    File? configFile;
-    Map<String, dynamic>? config;
+    Map<String, dynamic> config = {};
 
     try {
-      configFile = findConfigFile(projectRoot);
+      final configFile = findConfigFile(projectRoot);
       config = loadConfig(configFile);
     } catch (e) {
       print('Warning: Could not load configuration. Using default settings.');
-      config = {};
     }
 
     // If format not specified in command, try to get from config or use default
@@ -90,12 +88,10 @@ class ExportCommand extends Command<int> {
             .toList();
 
         try {
-          // Find the config file
+          // Find config file again for gen_arb command
           final configFile = findConfigFile(projectRoot);
 
-          // Use the proper method with the correct parameters
           genArbCommand.genArb(projectRoot, configFile, arbFiles);
-
           print('ARB files generated successfully');
         } catch (e) {
           print('Error generating ARB files: $e');
@@ -115,23 +111,27 @@ class ExportCommand extends Command<int> {
 
     print('Exporting files with metadata support to $format format...');
 
-    // Export files based on format
-    switch (format) {
-      case 'xlf':
-        await _exportToXliff(languages, baseLanguage, arbDir, targetDir);
-        break;
-      case 'json':
-        await _exportToJson(languages, baseLanguage, arbDir, targetDir);
-        break;
-      default:
-        print('Unsupported export format: $format');
-        print('Supported formats: xlf, json');
-        return 1;
-    }
+    try {
+      final converter = ArbConverter();
+      converter.convert(
+        format: format,
+        baseLanguage: baseLanguage,
+        languages: languages,
+        inputDir: arbDir.path,
+        outputDir: targetDir.parent.path,
+      );
 
-    print(
-        'Successfully exported to ${targetDir.path} with descriptions and placeholder metadata');
-    return 0;
+      print(
+          'Successfully exported to ${targetDir.path} with descriptions and placeholder metadata');
+      return 0;
+    } catch (e) {
+      if (e is FormatException) {
+        print(e.message);
+      } else {
+        print('Error during export: $e');
+      }
+      return 1;
+    }
   }
 
   bool _arbFilesExist(Directory arbDir, List<String> languages) {
@@ -150,37 +150,5 @@ class ExportCommand extends Command<int> {
       }
     }
     return true;
-  }
-
-  Future<void> _exportToXliff(
-    List<String> languages,
-    String baseLanguage,
-    Directory sourceDir,
-    Directory targetDir,
-  ) async {
-    final converter = ArbConverter();
-
-    converter.convertToXlf(
-      baseLanguage: baseLanguage,
-      languages: languages,
-      inputDir: sourceDir.path,
-      outputDir: targetDir.parent.path,
-    );
-  }
-
-  Future<void> _exportToJson(
-    List<String> languages,
-    String baseLanguage,
-    Directory sourceDir,
-    Directory targetDir,
-  ) async {
-    final converter = ArbConverter();
-
-    converter.convertToJson(
-      baseLanguage: baseLanguage,
-      languages: languages,
-      inputDir: sourceDir.path,
-      outputDir: targetDir.parent.path,
-    );
   }
 }

@@ -1,61 +1,68 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2024-03-22
-
+## [1.3.0] - 2024-03-19
 ### Added
-- JSON export format support
-- Configuration option `export_format` to specify default export format
-- List of supported formats shown when using an unsupported format
-- Documentation for JSON export format including examples
+- Support for Gettext PO format export (`po`) via the export command
+- New examples in README for PO format export
+- New file extension `.po` for exported files
+- Documentation for PO format in the README
+- Support for metadata preservation in PO format including descriptions and placeholders
 
 ### Changed
-- Renamed command parameter `--target` to `--format` for better clarity
-- Export command documentation to reflect new parameter name
-- Internal export handling structure for better extensibility
+- Fixed null safety issue in `export_command.dart` with config file handling
+- Improved error handling in export command
+- Updated export command documentation
+- Made export format parameter case-insensitive
+- Enhanced configuration file error messages
 
 ### Fixed
-- Error message clarity when using unsupported export formats
+- Issue with nullable `File` type in export command
+- Configuration file handling in export command
+- Error messages for missing configuration files
 
-## [1.1.0] - 2024-03-21
-
+## [1.2.0] - 2024-03-19
 ### Added
-- Support for dual ARB file generation:
-  - Simplified version (`app_*.arb`) for Flutter localization
-  - Full metadata version (`metadata/app_*_metadata.arb`) with complete structure
-- Enhanced metadata preservation in XLIFF export including:
-  - Description notes with priority
-  - Placeholder information (type, example, description)
-  - Source text from base language
+- Support for JSON format export
+- New examples in README for JSON format
+- Improved error messages for format selection
 
 ### Changed
-- Export command now uses metadata files instead of simplified ARB files
-- File organization improved with dedicated `metadata` subdirectory
-- Source text in XLIFF files now taken from base language when available
+- Refactored export command to support multiple formats
+- Updated command-line help text
+- Improved configuration file handling
 
-### Fixed
-- Correct handling of metadata during ARB to XLIFF conversion
-- Proper preservation of placeholder information in XLIFF export
+## [1.1.0] - 2024-03-19
+### Added
+- Support for XLIFF format export
+- Configuration file support
+- Language selection via command line
+- Detailed documentation in README
 
-## [1.0.4] - 2024-03-20
+### Changed
+- Improved error handling
+- Better command-line interface
+- Enhanced file structure support
+
+
+## [1.0.4] - 2024-03-19
 
 ### Fixed
 - Permission errors in GitHub Actions workflow:
-  - Created dedicated temp directory with write permissions
-  - Set proper MOCK_BASE_PATH environment variable
-  - Improved test debugging with verbose output
+    - Created dedicated temp directory with write permissions
+    - Set proper MOCK_BASE_PATH environment variable
+    - Improved test debugging with verbose output
 - CI workflow sequence to generate mocks before analyzing code to prevent analyzer errors
 
 ### Changed
 - Disabled failing tests in output generation group temporarily
-  - Core functionality stabilization in progress
-  - Tests to be re-enabled in future releases
+    - Core functionality stabilization in progress
+    - Tests to be re-enabled in future releases
 
-## [1.0.3] - 2024-03-19
+## [1.0.3] - 2024-03-18
 
 ### Added
 - Duplicate key detection and conflict reporting within each language
@@ -77,22 +84,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - Improved language detection by checking directory paths
 
-## [1.0.1] - 2024-03-17
-
-### Added
-- Better error reporting for config file issues
-
-### Changed
-- Enhanced output formatting of generated ARB files
-
-### Fixed
-- Handling of nested JSON structures
-
-## [1.0.0] - 2024-03-16
-
+## [1.0.0] - 2024-03-18
 ### Added
 - Initial release
-- Configuration file support with language settings
-- Merged ARB file generation from multiple sources
-- Support for nested JSON structures with dot notation flattening
-- Automatic language detection from directory structure
+- Support for ARB file generation
+- Basic translation file management
+- Directory structure validation
+- Command-line interface
