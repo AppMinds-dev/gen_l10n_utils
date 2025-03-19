@@ -44,10 +44,10 @@ class XliffConverter {
   }
 
   void _buildBody(
-      XmlBuilder builder, {
-        required Map<String, dynamic> sourceContent,
-        required Map<String, dynamic> targetContent,
-      }) {
+    XmlBuilder builder, {
+    required Map<String, dynamic> sourceContent,
+    required Map<String, dynamic> targetContent,
+  }) {
     builder.element('body', nest: () {
       for (final key in sourceContent.keys) {
         if (!key.startsWith('@')) {
@@ -65,12 +65,12 @@ class XliffConverter {
   }
 
   void _buildTransUnit(
-      XmlBuilder builder, {
-        required String id,
-        required String source,
-        String? target,
-        Map<String, dynamic>? metadata,
-      }) {
+    XmlBuilder builder, {
+    required String id,
+    required String source,
+    String? target,
+    Map<String, dynamic>? metadata,
+  }) {
     builder.element('trans-unit', attributes: {'id': id}, nest: () {
       builder.element('source', nest: source);
       if (target != null) {
@@ -80,7 +80,8 @@ class XliffConverter {
       if (metadata != null) {
         final description = metadata['description'] as String?;
         if (description != null && description.isNotEmpty) {
-          builder.element('note', attributes: {'priority': '1'}, nest: description);
+          builder.element('note',
+              attributes: {'priority': '1'}, nest: description);
         }
 
         final placeholders = metadata['placeholders'] as Map<String, dynamic>?;
@@ -96,10 +97,12 @@ class XliffConverter {
             ].join(', ');
 
             if (note.isNotEmpty) {
-              builder.element('note', attributes: {
-                'from': 'placeholder',
-                'name': name,
-              }, nest: note);
+              builder.element('note',
+                  attributes: {
+                    'from': 'placeholder',
+                    'name': name,
+                  },
+                  nest: note);
             }
           }
         }

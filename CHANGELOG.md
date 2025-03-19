@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2024-03-22
+
+### Added
+- JSON export format support
+- Configuration option `export_format` to specify default export format
+- List of supported formats shown when using an unsupported format
+- Documentation for JSON export format including examples
+
+### Changed
+- Renamed command parameter `--target` to `--format` for better clarity
+- Export command documentation to reflect new parameter name
+- Internal export handling structure for better extensibility
+
+### Fixed
+- Error message clarity when using unsupported export formats
+
 ## [1.1.0] - 2024-03-21
 
 ### Added

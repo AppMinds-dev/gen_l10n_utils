@@ -16,23 +16,23 @@ class ExportCommand extends Command<int> {
 
   ExportCommand() {
     argParser.addOption(
-      'target',
-      abbr: 't',
+      'format',
+      abbr: 'f',
       help:
-      'Output format (xlf, json, etc.). If not specified, uses the format from config or defaults to xlf.',
+          'Output format (xlf, json, etc.). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
       abbr: 'l',
       help:
-      'Specific language(s) to export (comma-separated). If not specified, all languages will be exported.',
+          'Specific language(s) to export (comma-separated). If not specified, all languages will be exported.',
     );
   }
 
   @override
   Future<int> run() async {
-    // Get target from arguments, config file, or default to xlf
-    String? target = argResults?['target'] as String?;
+    // Get format from arguments, config file, or default to xlf
+    String? format = argResults?['format'] as String?;
     final languageParam = argResults?['language'] as String?;
 
     // Find config file to get languages and potentially the default format
@@ -48,8 +48,8 @@ class ExportCommand extends Command<int> {
       config = {};
     }
 
-    // If target not specified in command, try to get from config or use default
-    target ??= config['export_format'] as String? ?? 'xlf';
+    // If format not specified in command, try to get from config or use default
+    format ??= config['export_format'] as String? ?? 'xlf';
 
     // Get base language from config or default to 'en'
     final baseLanguage = config['base_language'] as String? ?? 'en';
@@ -107,22 +107,25 @@ class ExportCommand extends Command<int> {
       }
     }
 
-    // Create target directory if it doesn't exist
-    final targetDir = Directory(p.join('lib', 'l10n', target));
+    // Create format directory if it doesn't exist
+    final targetDir = Directory(p.join('lib', 'l10n', format));
     if (!targetDir.existsSync()) {
       targetDir.createSync(recursive: true);
     }
 
-    print('Exporting files with metadata support to $target format...');
+    print('Exporting files with metadata support to $format format...');
 
-    // Export files based on target format
-    switch (target) {
+    // Export files based on format
+    switch (format) {
       case 'xlf':
         await _exportToXliff(languages, baseLanguage, arbDir, targetDir);
         break;
-    // Add other formats here as needed
+      case 'json':
+        await _exportToJson(languages, baseLanguage, arbDir, targetDir);
+        break;
       default:
-        print('Unsupported export format: $target');
+        print('Unsupported export format: $format');
+        print('Supported formats: xlf, json');
         return 1;
     }
 
@@ -141,7 +144,7 @@ class ExportCommand extends Command<int> {
     for (final lang in languages) {
       final arbFile = File(p.join(arbDir.path, 'app_$lang.arb'));
       final metadataFile =
-      File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
+          File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
       if (!arbFile.existsSync() || !metadataFile.existsSync()) {
         return false;
       }
@@ -150,14 +153,30 @@ class ExportCommand extends Command<int> {
   }
 
   Future<void> _exportToXliff(
-      List<String> languages,
-      String baseLanguage,
-      Directory sourceDir,
-      Directory targetDir,
-      ) async {
+    List<String> languages,
+    String baseLanguage,
+    Directory sourceDir,
+    Directory targetDir,
+  ) async {
     final converter = ArbConverter();
 
     converter.convertToXlf(
+      baseLanguage: baseLanguage,
+      languages: languages,
+      inputDir: sourceDir.path,
+      outputDir: targetDir.parent.path,
+    );
+  }
+
+  Future<void> _exportToJson(
+    List<String> languages,
+    String baseLanguage,
+    Directory sourceDir,
+    Directory targetDir,
+  ) async {
+    final converter = ArbConverter();
+
+    converter.convertToJson(
       baseLanguage: baseLanguage,
       languages: languages,
       inputDir: sourceDir.path,

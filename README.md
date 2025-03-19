@@ -1,17 +1,24 @@
 # gen_l10n_utils
 
-A command-line utility for managing Flutter app localizations with enhanced features for metadata handling and export capabilities.
+A command-line utility for managing Dart/Flutter app localizations with enhanced features for metadata handling and export capabilities.
 
 ## Features
 
 - Find and merge ARB files from multiple directories
 - Generate simplified ARB files for Flutter localization
 - Generate metadata-rich ARB files for export
-- Export to XLIFF format with full metadata preservation
+- Export to XLIFF and JSON formats with full metadata preservation
 - Automatic conflict detection and resolution
 - Support for nested JSON structures
 - Configurable via YAML
 
+## Available Commands
+
+- `create-config`: Creates a configuration file in your project root
+- `gen-arb`: Generates and merges ARB files from your project
+- `translate`: Creates or updates translation files for specific languages
+- `export`: Exports ARB files to XLIFF or JSON format with metadata preservation
+- 
 ## Installation
 
 Add the package to your `pubspec.yaml` file:
@@ -128,7 +135,9 @@ Generated metadata ARB (`metadata/app_en_metadata.arb`):
 dart run gen_l10n_utils export
 
 # Export to a specific format
-dart run gen_l10n_utils export --target xlf
+dart run gen_l10n_utils export --format xlf
+# or
+dart run gen_l10n_utils export -f json
 
 # Export specific languages
 dart run gen_l10n_utils export --language en,fr,de
@@ -162,12 +171,37 @@ Example XLIFF output (`lib/l10n/xlf/app_de.xlf`):
 </xliff>
 ```
 
+Example JSON output (`lib/l10n/json/app_de.json`):
+```json
+{
+  "metadata": {
+    "format_version": "1.0",
+    "tool": "gen_l10n_utils"
+  },
+  "translations": {
+    "greeting": {
+      "source": "Welcome, {username}!",
+      "target": "Willkommen, {username}!",
+      "description": "A welcome message with the user's name",
+      "placeholders": {
+        "username": {
+          "type": "String",
+          "example": "John Doe",
+          "description": "The user's display name"
+        }
+      }
+    }
+  }
+}
+```
+
 Options:
-- `--target` or `-t`: Output format (currently supported: `xlf`)
+- `--format` or `-f`: Output format (currently supported: `xlf`, `json`)
 - `--language` or `-l`: Specific language(s) to export (comma-separated)
 
 Currently supported export formats:
 - `xlf`: XLIFF 1.2 format for translation tools with full metadata preservation
+- `json`: Simplified JSON format with metadata structured for easy processing
 
 ## Directory Structure Requirements
 
