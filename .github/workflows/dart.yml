@@ -26,19 +26,24 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      - name: Generate mocks
-        run: dart run build_runner build --delete-conflicting-outputs
-
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed $(find . -name "*.dart" ! -name "*.mocks.dart")
 
       - name: Analyze project source
         run: dart analyze
 
-      - name: Run tests
+      - name: Generate mocks
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Create mock directory for tests
+        run: mkdir -p /tmp/mock/temp
+
+      - name: Run tests with permission
         run: |
           echo "Running tests with full output..."
           dart test --chain-stack-traces --verbose-trace
+        env:
+          MOCK_BASE_PATH: /tmp/mock
 
   publish:
     needs: test
