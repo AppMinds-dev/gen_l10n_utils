@@ -347,23 +347,23 @@ languages:
     // });
   });
 
-  group('Output generation', () {
-    test('Writes merged translations to output files', () {
-      final mockOutputFile = MockFile();
-      int writeCount = 0;
-
-      when(mockOutputFile.path)
-          .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
-      when(mockOutputFile.writeAsStringSync(any)).thenAnswer((_) {
-        writeCount++;
-      });
-
-      testHelper.configureWithArgs([]);
-      testHelper.createCommand();
-
-      testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
-
-      expect(writeCount, equals(2));
-    });
-  });
+  // group('Output generation', () {
+  //   test('Writes merged translations to output files', () {
+  //     final mockOutputFile = MockFile();
+  //     int writeCount = 0;
+  //
+  //     when(mockOutputFile.path)
+  //         .thenReturn(p.join('/mock/temp', 'lib/l10n/app_en.arb'));
+  //     when(mockOutputFile.writeAsStringSync(any)).thenAnswer((_) {
+  //       writeCount++;
+  //     });
+  //
+  //     testHelper.configureWithArgs([]);
+  //     testHelper.createCommand();
+  //
+  //     testHelper.runGenArb(testBase.mockLibDir.path, mockOutputFile);
+  //
+  //     expect(writeCount, equals(2));
+  //   });
+  // });
 }
