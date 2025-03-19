@@ -18,7 +18,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.1.0
+  gen_l10n_utils: ^1.2.0
 ```
 
 Or install it globally:
@@ -128,10 +128,10 @@ Generated metadata ARB (`metadata/app_en_metadata.arb`):
 dart run gen_l10n_utils export
 
 # Export to a specific format
-dart run gen_l10n_utils export --target=xlf
+dart run gen_l10n_utils export --target xlf
 
 # Export specific languages
-dart run gen_l10n_utils export --language=en,fr,de
+dart run gen_l10n_utils export --language en,fr,de
 ```
 
 This command:
