@@ -19,12 +19,14 @@ class ExportCommand extends Command<int> {
     argParser.addOption(
       'target',
       abbr: 't',
-      help: 'Output format (xlf, json, etc.). If not specified, uses the format from config or defaults to xlf.',
+      help:
+          'Output format (xlf, json, etc.). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
       abbr: 'l',
-      help: 'Specific language(s) to export (comma-separated). If not specified, all languages will be exported.',
+      help:
+          'Specific language(s) to export (comma-separated). If not specified, all languages will be exported.',
     );
   }
 
@@ -120,13 +122,14 @@ class ExportCommand extends Command<int> {
       case 'xlf':
         await _exportToXliff(languages, baseLanguage, arbDir, targetDir);
         break;
-    // Add other formats here as needed
+      // Add other formats here as needed
       default:
         print('Unsupported export format: $target');
         return 1;
     }
 
-    print('Successfully exported to ${targetDir.path} with descriptions and placeholder metadata');
+    print(
+        'Successfully exported to ${targetDir.path} with descriptions and placeholder metadata');
     return 0;
   }
 
@@ -139,7 +142,8 @@ class ExportCommand extends Command<int> {
 
     for (final lang in languages) {
       final arbFile = File(p.join(arbDir.path, 'app_$lang.arb'));
-      final metadataFile = File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
+      final metadataFile =
+          File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
       if (!arbFile.existsSync() || !metadataFile.existsSync()) {
         return false;
       }
@@ -147,16 +151,20 @@ class ExportCommand extends Command<int> {
     return true;
   }
 
-  Future<void> _exportToXliff(List<String> languages, String baseLanguage, Directory sourceDir, Directory targetDir) async {
+  Future<void> _exportToXliff(List<String> languages, String baseLanguage,
+      Directory sourceDir, Directory targetDir) async {
     // Load base language metadata ARB file for source text
-    final baseLanguageFile = File(p.join(sourceDir.path, 'metadata', 'app_${baseLanguage}_metadata.arb'));
+    final baseLanguageFile = File(
+        p.join(sourceDir.path, 'metadata', 'app_${baseLanguage}_metadata.arb'));
     if (!baseLanguageFile.existsSync()) {
-      print('Warning: Base language metadata file not found. Using target language text as source.');
+      print(
+          'Warning: Base language metadata file not found. Using target language text as source.');
     }
 
     for (final lang in languages) {
       // Use metadata ARB file from the metadata subdirectory
-      final arbFile = File(p.join(sourceDir.path, 'metadata', 'app_${lang}_metadata.arb'));
+      final arbFile =
+          File(p.join(sourceDir.path, 'metadata', 'app_${lang}_metadata.arb'));
       if (arbFile.existsSync()) {
         // Pass the base language file if it exists and the current language isn't the base language
         final xliffContent = await ArbConverter.toXliff(

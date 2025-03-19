@@ -7,18 +7,20 @@ import 'package:xml/xml.dart';
 class ArbConverter {
   /// Converts an ARB file to XLIFF format including metadata
   static Future<String> toXliff(
-      File arbFile,
-      String language, {
-        File? baseLanguageFile,
-        String baseLanguage = 'en',
-      }) async {
+    File arbFile,
+    String language, {
+    File? baseLanguageFile,
+    String baseLanguage = 'en',
+  }) async {
     final content = await arbFile.readAsString();
     final Map<String, dynamic> arbJson = jsonDecode(content);
 
     // Debug: Print the ARB content to see if metadata exists
-    print('ARB file for $language contains metadata: ${arbJson.keys.any((k) => k.startsWith('@'))}');
+    print(
+        'ARB file for $language contains metadata: ${arbJson.keys.any((k) => k.startsWith('@'))}');
     if (arbJson.keys.any((k) => k.startsWith('@'))) {
-      final metadataKeys = arbJson.keys.where((k) => k.startsWith('@')).toList();
+      final metadataKeys =
+          arbJson.keys.where((k) => k.startsWith('@')).toList();
       print('Metadata keys found: $metadataKeys');
       // Print a sample metadata entry
       if (metadataKeys.isNotEmpty) {
@@ -88,14 +90,16 @@ class ArbConverter {
 
               // Add description if available
               if (metadata != null && metadata['description'] != null) {
-                builder.element('note', attributes: {'priority': '1'},
+                builder.element('note',
+                    attributes: {'priority': '1'},
                     nest: metadata['description'].toString());
                 print('Added description for $key: ${metadata['description']}');
               }
 
               // Add placeholders if available
               if (metadata != null && metadata['placeholders'] != null) {
-                final placeholders = metadata['placeholders'] as Map<String, dynamic>;
+                final placeholders =
+                    metadata['placeholders'] as Map<String, dynamic>;
                 print('Adding ${placeholders.length} placeholders for $key');
 
                 placeholders.forEach((phName, phData) {

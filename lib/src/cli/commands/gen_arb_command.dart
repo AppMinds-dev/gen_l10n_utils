@@ -108,7 +108,8 @@ class GenArbCommand extends Command<int> {
 
       for (final lang in supportedLanguages) {
         if (languageFiles[lang]!.isNotEmpty) {
-          final result = mergeArbFilesWithConflictDetection(languageFiles[lang]!);
+          final result =
+              mergeArbFilesWithConflictDetection(languageFiles[lang]!);
 
           // Generate simplified version (just translations)
           final simplifiedContent = _createSimplifiedArb(result.content);
@@ -127,7 +128,7 @@ class GenArbCommand extends Command<int> {
 
           // Write metadata version
           final metadataFile =
-          File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
+              File(p.join(metadataDir.path, 'app_${lang}_metadata.arb'));
           metadataFile.writeAsStringSync(
             const JsonEncoder.withIndent("  ").convert(sortedMetadata),
           );
@@ -190,7 +191,8 @@ class GenArbCommand extends Command<int> {
           }
 
           if (property != null) {
-            metadata['@$baseKey']['placeholders'][placeholder][property] = value;
+            metadata['@$baseKey']['placeholders'][placeholder][property] =
+                value;
           }
         } else if (parts.length == 2 && parts[1] == 'description') {
           // Handle description
@@ -220,13 +222,13 @@ class GenArbCommand extends Command<int> {
           if (mergedContent.containsKey(key)) {
             if (mergedContent[key] != value) {
               conflicts.putIfAbsent(key, () => []).add(
-                ConflictEntry(
-                  file.path,
-                  value,
-                  mergedContent[key],
-                  keySourceFiles[key] ?? 'unknown source',
-                ),
-              );
+                    ConflictEntry(
+                      file.path,
+                      value,
+                      mergedContent[key],
+                      keySourceFiles[key] ?? 'unknown source',
+                    ),
+                  );
               continue;
             }
           } else {

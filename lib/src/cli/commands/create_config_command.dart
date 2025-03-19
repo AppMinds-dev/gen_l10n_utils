@@ -95,7 +95,7 @@ class CreateConfigCommand extends Command<int> {
 
       // Create new file if none exists
       final newFile =
-      testMode ? (testFile ?? File(configFileName)) : File(configFileName);
+          testMode ? (testFile ?? File(configFileName)) : File(configFileName);
 
       // Create YAML content directly
       var yamlContent = '''base_language: $baseLanguage
