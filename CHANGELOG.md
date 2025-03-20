@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-03-20
+
+### Added
+- CSV export format with the following columns:
+  - Key: Translation identifier
+  - Source: Text in base language
+  - Target: Text in target language
+  - Description: Context and usage notes
+  - Placeholder: Variable name
+  - Placeholder Details: Type, example, and description
+- Detailed documentation in README
+
 ## [1.5.0] - 2025-03-20
 
 ### Added
@@ -19,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced output path reporting for XLSX files to indicate the sheet structure
 
 ## [1.4.0] - 2025-03-20
+
 ### Added
 - Support for YAML format export (`yaml`) via the export command
 - New examples in README for YAML format export
@@ -36,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated format-specific conversion methods in ArbConverter
 
 ## [1.3.0] - 2025-03-19
+
 ### Added
 - Support for Gettext PO format export (`po`) via the export command
 - New examples in README for PO format export
@@ -56,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error messages for missing configuration files
 
 ## [1.2.0] - 2025-03-19
+
 ### Added
 - Support for JSON format export
 - New examples in README for JSON format
@@ -67,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved configuration file handling
 
 ## [1.1.0] - 2025-03-19
+
 ### Added
 - Support for XLIFF format export
 - Configuration file support
@@ -77,7 +93,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling
 - Better command-line interface
 - Enhanced file structure support
-
 
 ## [1.0.4] - 2025-03-19
 
@@ -116,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved language detection by checking directory paths
 
 ## [1.0.0] - 2025-03-18
+
 ### Added
 - Initial release
 - Support for ARB file generation
