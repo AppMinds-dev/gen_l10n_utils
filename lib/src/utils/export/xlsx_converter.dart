@@ -21,19 +21,6 @@ class XlsxConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to XLSX
-    final baseLanguageXlsx = convertToXlsx(
-      sourceLanguage: baseLanguage,
-      targetLanguage: baseLanguage,
-      sourceContent: baseContent,
-      targetContent: baseContent,
-    );
-
-    final baseOutputPath =
-        path.join(outputDir, 'xlsx', 'app_$baseLanguage.xlsx');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguageXlsx, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;

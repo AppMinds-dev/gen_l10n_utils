@@ -16,18 +16,6 @@ class XliffConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to XLIFF
-    final baseLanguageXliff = convertToXliff(
-      sourceLanguage: baseLanguage,
-      targetLanguage: baseLanguage,
-      sourceContent: baseContent,
-      targetContent: baseContent,
-    );
-
-    final baseOutputPath = path.join(outputDir, 'xlf', 'app_$baseLanguage.xlf');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguageXliff, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;

@@ -36,18 +36,6 @@ class CsvConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to CSV
-    final baseLanguageCsvContent = convertToCsv(
-      sourceLanguage: baseLanguage,
-      targetLanguage: baseLanguage,
-      sourceContent: _flattenJson(baseContent),
-      targetContent: _flattenJson(baseContent),
-    );
-
-    final baseOutputPath = path.join(outputDir, 'csv', 'app_$baseLanguage.csv');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguageCsvContent, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;

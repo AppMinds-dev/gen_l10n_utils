@@ -15,17 +15,6 @@ class JsonConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to JSON
-    final baseLanguageJson = convertToJson(
-      sourceContent: baseContent,
-      targetContent: baseContent,
-    );
-
-    final baseOutputPath =
-        path.join(outputDir, 'json', 'app_$baseLanguage.json');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguageJson, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;

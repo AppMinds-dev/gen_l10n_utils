@@ -16,19 +16,6 @@ class YamlConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to YAML
-    final baseLanguageYaml = convertToYaml(
-      sourceLanguage: baseLanguage,
-      targetLanguage: baseLanguage,
-      sourceContent: baseContent,
-      targetContent: baseContent,
-    );
-
-    final baseOutputPath =
-        path.join(outputDir, 'yaml', 'app_$baseLanguage.yaml');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguageYaml, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
@@ -108,7 +95,7 @@ class YamlConverter implements FormatConverter {
 
           translations[key] = _createTranslationEntry(
             source: value as String,
-            target: targetMap?[key] as String?,
+            target: targetMap[key] as String?,
             metadata: metadata,
           );
         }

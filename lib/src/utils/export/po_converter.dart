@@ -15,18 +15,6 @@ class PoConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
-    // Convert base language to PO
-    final baseLanguagePo = convertToPo(
-      sourceLanguage: baseLanguage,
-      targetLanguage: baseLanguage,
-      sourceContent: baseContent,
-      targetContent: baseContent,
-    );
-
-    final baseOutputPath = path.join(outputDir, 'po', 'app_$baseLanguage.po');
-    _ensureDirectoryExists(baseOutputPath);
-    saveToFile(baseLanguagePo, baseOutputPath);
-
     // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
