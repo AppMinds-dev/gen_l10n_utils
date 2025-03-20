@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2025-03-20
+
+### Changed
+- Upgraded dependencies to latest versions
+
+### Fixed
+- Excel header styling configuration in XLSX export
+  - Created a single header style definition to reduce code duplication
+  - Fixed incorrect color formatting using `ExcelColor.grey300`
+  - Fixed header style application across all sheets
+- Removed default 'Sheet1' from Excel exports
+
 ## [1.6.0] - 2025-03-20
 
 ### Added
@@ -15,18 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Placeholder: Variable name
   - Placeholder Details: Type, example, and description
 - Detailed documentation in README
-
-## [1.5.1] - 2025-03-20
-
-### Changed
-- Upgraded dependencies to latest versions
-
-### Fixed
-- Excel header styling configuration in XLSX export
-  - Created a single header style definition to reduce code duplication
-  - Fixed incorrect color formatting using `ExcelColor.grey300`
-  - Fixed header style application across all sheets
-- Removed default 'Sheet1' from Excel exports
 
 ## [1.5.0] - 2025-03-20
 

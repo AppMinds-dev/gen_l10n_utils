@@ -4,13 +4,18 @@ A command-line utility for managing Dart/Flutter app localizations with enhanced
 
 ## Features
 
-- Find and merge ARB files from multiple directories
-- Generate simplified ARB files for Flutter localization
-- Generate metadata-rich ARB files for export
-- Export to **XLIFF**, **JSON**, **PO**, **YAML**, and **XLSX** formats with full metadata preservation
-- Automatic conflict detection and resolution
-- Support for nested JSON structures
-- Configurable via YAML
+- **Automatic ARB File Generation**: Finds and merges all translations in your project
+- **Metadata Preservation**: Keeps descriptions and placeholder details
+- **Multiple Export Formats**:
+  - `csv`: CSV format with key, source, target, description and placeholder details
+  - `json`: Simplified JSON format with metadata structured for easy processing
+  - `po`: Gettext PO format with comments for metadata preservation
+  - `xlf`: XLIFF format for CAT (Computer-Assisted Translation) tool compatibility
+  - `xlsx`: Excel format with separate sheets for translations and metadata
+  - `yaml`: YAML format with structured metadata for easy reading and editing
+- **Automatic conflict detection and resolution**
+- **Support for nested JSON structures**
+- **Configurable via YAML**
 
 ## Available Commands
 
@@ -25,7 +30,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.5.1
+  gen_l10n_utils: ^1.6.1
 ```
 
 Or install it globally:
@@ -157,6 +162,11 @@ This command:
 - Can export all languages or specific languages
 - Will generate ARB files if they don't exist (after confirmation)
 
+### Export Formats
+
+#### XLIFF (xlf)
+Standard XML format for translation tools. Includes source text, translations, and metadata.
+
 Example XLIFF output (`lib/l10n/xlf/app_de.xlf`):
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -176,6 +186,9 @@ Example XLIFF output (`lib/l10n/xlf/app_de.xlf`):
   </file>
 </xliff>
 ```
+
+#### JSON (json)
+Simplified JSON format with structured metadata. Easy to process programmatically.
 
 Example JSON output (`lib/l10n/json/app_de.json`):
 ```json
@@ -201,6 +214,9 @@ Example JSON output (`lib/l10n/json/app_de.json`):
 }
 ```
 
+#### Gettext PO (po)
+Industry-standard format with full support for translator comments and context.
+
 Example PO output (`lib/l10n/po/app_de.po`):
 ```po
 msgid ""
@@ -223,6 +239,9 @@ msgid "Welcome, {username}!"
 msgstr "Willkommen, {username}!"
 ```
 
+#### YAML (yaml)
+Human-readable format with structured metadata. Good for manual editing.
+
 Example YAML output (`lib/l10n/yaml/app_de.yaml`):
 ```yaml
 metadata:
@@ -240,11 +259,17 @@ translations:
         description: The user's display name
 ```
 
+#### Excel (xlsx)
+Spreadsheet format with three sheets:
+- Overview: Project information
+- Translations: Source and target text
+- Metadata: Descriptions and placeholder details
+
 Example XLSX output (`lib/l10n/xlsx/app_de.xlsx`):
 - Each Excel file contains three sheets:
-    - **Overview**: Contains file metadata, source/target languages, and export information
-    - **Translations**: Main sheet with translation keys, source text and target translations
-    - **Metadata**: Detailed information about descriptions and placeholders
+  - **Overview**: Contains file metadata, source/target languages, and export information
+  - **Translations**: Main sheet with translation keys, source text and target translations
+  - **Metadata**: Detailed information about descriptions and placeholders
 
 The XLSX format is especially useful for:
 - Sharing translations with non-technical translators
@@ -252,25 +277,14 @@ The XLSX format is especially useful for:
 - Having a single file with all related translation information
 - Bulk editing in spreadsheet applications
 
-Options:
-- `--format` or `-f`: Output format (currently supported: `xlf`, `json`, `po`, `yaml`, `xlsx`)
-- `--language` or `-l`: Specific language(s) to export (comma-separated)
-
-Currently supported export formats:
-- `xlf`: XLIFF 1.2 format for translation tools with full metadata preservation
-- `json`: Simplified JSON format with metadata structured for easy processing
-- `po`: Gettext PO format with comments for metadata preservation
-- `yaml`: YAML format with structured metadata for easy reading and editing
-- `xlsx`: Excel format with separate sheets for translations and metadata
-- **Automatic ARB File Generation**: Finds and merges all translations in your project
-- **Metadata Preservation**: Keeps descriptions and placeholder details
-- **Multiple Export Formats**:
-  - `csv`: CSV format with key, source, target, description and placeholder details
-  - `json`: Simplified JSON format with metadata structured for easy processing
-  - `po`: Gettext PO format with comments for metadata preservation
-  - `xlf`: XLIFF format for CAT (Computer-Assisted Translation) tool compatibility
-  - `xlsx`: Excel format with separate sheets for translations and metadata
-  - `yaml`: YAML format with structured metadata for easy reading and editing
+#### CSV (csv)
+Comma-separated values format with columns for:
+- Key: Translation identifier
+- Source: Text in base language
+- Target: Text in target language
+- Description: Context and usage notes
+- Placeholder: Variable name
+- Placeholder Details: Type, example, and description
 
 ## Directory Structure Requirements
 
@@ -322,52 +336,6 @@ languages:
 # Default format for exporting translations
 export_format: xlf
 ```
-
-## Usage
-
-### CLI Commands
-
-```bash
-# Generate ARB files
-gen_l10n_utils generate
-
-# Export translations
-gen_l10n_utils export --format xlf
-gen_l10n_utils export --format json
-gen_l10n_utils export --format po
-gen_l10n_utils export --format yaml
-gen_l10n_utils export --format xlsx
-gen_l10n_utils export --format csv
-```
-
-### Export Formats
-
-#### XLIFF (xlf)
-Standard XML format for translation tools. Includes source text, translations, and metadata.
-
-#### JSON (json)
-Simplified JSON format with structured metadata. Easy to process programmatically.
-
-#### Gettext PO (po)
-Industry-standard format with full support for translator comments and context.
-
-#### YAML (yaml)
-Human-readable format with structured metadata. Good for manual editing.
-
-#### Excel (xlsx)
-Spreadsheet format with three sheets:
-- Overview: Project information
-- Translations: Source and target text
-- Metadata: Descriptions and placeholder details
-
-#### CSV (csv)
-Comma-separated values format with columns for:
-- Key: Translation identifier
-- Source: Text in base language
-- Target: Text in target language
-- Description: Context and usage notes
-- Placeholder: Variable name
-- Placeholder Details: Type, example, and description
 
 ## Integration with Flutter Localization
 
