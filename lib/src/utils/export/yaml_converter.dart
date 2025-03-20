@@ -16,6 +16,20 @@ class YamlConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to YAML
+    final baseLanguageYaml = convertToYaml(
+      sourceLanguage: baseLanguage,
+      targetLanguage: baseLanguage,
+      sourceContent: baseContent,
+      targetContent: baseContent,
+    );
+
+    final baseOutputPath =
+        path.join(outputDir, 'yaml', 'app_$baseLanguage.yaml');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguageYaml, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -24,6 +38,8 @@ class YamlConverter implements FormatConverter {
       );
 
       final yaml = convertToYaml(
+        sourceLanguage: baseLanguage,
+        targetLanguage: language,
         sourceContent: baseContent,
         targetContent: targetContent,
       );
@@ -34,32 +50,26 @@ class YamlConverter implements FormatConverter {
     }
   }
 
-  /// Converts ARB content to YAML format
   String convertToYaml({
+    required String sourceLanguage,
+    required String targetLanguage,
     required Map<String, dynamic> sourceContent,
     required Map<String, dynamic> targetContent,
   }) {
     final translations = <String, dynamic>{};
 
-    // Process each translation entry
-    for (final key in sourceContent.keys) {
-      if (!key.startsWith('@')) {
-        final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
-        final source = sourceContent[key] as String;
-        final target = targetContent[key] as String?;
-
-        translations[key] = _createTranslationEntry(
-          source: source,
-          target: target,
-          metadata: metadata,
-        );
-      }
-    }
+    _processTranslations(
+      translations: translations,
+      sourceContent: sourceContent,
+      targetContent: targetContent,
+    );
 
     final document = {
       'metadata': {
         'format_version': '1.0',
         'tool': 'gen_l10n_utils',
+        'source_language': sourceLanguage,
+        'target_language': targetLanguage,
       },
       'translations': translations,
     };
@@ -67,6 +77,51 @@ class YamlConverter implements FormatConverter {
     final yamlEditor = YamlEditor('');
     yamlEditor.update([], document);
     return yamlEditor.toString();
+  }
+
+  void _processTranslations({
+    required Map<String, dynamic> translations,
+    required Map<String, dynamic> sourceContent,
+    required Map<String, dynamic> targetContent,
+    String prefix = '',
+  }) {
+    for (final key in sourceContent.keys) {
+      if (!key.startsWith('@')) {
+        final value = sourceContent[key];
+        if (value is Map<String, dynamic>) {
+          // Handle nested structures
+          final nestedTranslations = <String, dynamic>{};
+          _processTranslations(
+            translations: nestedTranslations,
+            sourceContent: value,
+            targetContent: targetContent[key] ?? {},
+            prefix: prefix.isEmpty ? key : '$prefix.$key',
+          );
+          translations[key] = nestedTranslations;
+        } else {
+          final metadataKey = '@$key';
+          final metadata = sourceContent[metadataKey] as Map<String, dynamic>?;
+
+          final targetMap = prefix.isEmpty
+              ? targetContent
+              : _getNestedValue(targetContent, prefix.split('.'));
+
+          translations[key] = _createTranslationEntry(
+            source: value as String,
+            target: targetMap?[key] as String?,
+            metadata: metadata,
+          );
+        }
+      }
+    }
+  }
+
+  dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
+    var current = map;
+    for (var i = 0; i < keys.length; i++) {
+      current = current[keys[i]] as Map<String, dynamic>? ?? {};
+    }
+    return current;
   }
 
   Map<String, dynamic> _createTranslationEntry({
@@ -86,7 +141,6 @@ class YamlConverter implements FormatConverter {
     };
   }
 
-  /// Saves YAML content to a file
   void saveToFile(String yaml, String outputPath) {
     final file = File(outputPath);
     file.writeAsStringSync(yaml);

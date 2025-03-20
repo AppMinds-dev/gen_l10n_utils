@@ -16,6 +16,19 @@ class XliffConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to XLIFF
+    final baseLanguageXliff = convertToXliff(
+      sourceLanguage: baseLanguage,
+      targetLanguage: baseLanguage,
+      sourceContent: baseContent,
+      targetContent: baseContent,
+    );
+
+    final baseOutputPath = path.join(outputDir, 'xlf', 'app_$baseLanguage.xlf');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguageXliff, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -36,7 +49,6 @@ class XliffConverter implements FormatConverter {
     }
   }
 
-  /// Converts ARB content to XLIFF format
   XmlDocument convertToXliff({
     required String sourceLanguage,
     required String targetLanguage,
@@ -83,19 +95,50 @@ class XliffConverter implements FormatConverter {
     required Map<String, dynamic> targetContent,
   }) {
     builder.element('body', nest: () {
-      for (final key in sourceContent.keys) {
-        if (!key.startsWith('@')) {
-          final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
+      _processTranslations(
+        builder: builder,
+        sourceContent: sourceContent,
+        targetContent: targetContent,
+      );
+    });
+  }
+
+  void _processTranslations({
+    required XmlBuilder builder,
+    required Map<String, dynamic> sourceContent,
+    required Map<String, dynamic> targetContent,
+    String prefix = '',
+  }) {
+    for (final key in sourceContent.keys) {
+      if (!key.startsWith('@')) {
+        final value = sourceContent[key];
+        if (value is Map<String, dynamic>) {
+          // Handle nested structures
+          _processTranslations(
+            builder: builder,
+            sourceContent: value,
+            targetContent: targetContent[key] ?? {},
+            prefix: prefix.isEmpty ? key : '$prefix.$key',
+          );
+        } else {
+          final fullKey = prefix.isEmpty ? key : '$prefix.$key';
+          final metadataKey = '@$key';
+          final metadata = sourceContent[metadataKey] as Map<String, dynamic>?;
+
+          final targetMap = prefix.isEmpty
+              ? targetContent
+              : _getNestedValue(targetContent, prefix.split('.'));
+
           _buildTransUnit(
             builder,
-            id: key,
-            source: sourceContent[key] as String,
-            target: targetContent[key] as String?,
+            id: fullKey,
+            source: value as String,
+            target: targetMap?[key] as String?,
             metadata: metadata,
           );
         }
       }
-    });
+    }
   }
 
   void _buildTransUnit(
@@ -107,15 +150,12 @@ class XliffConverter implements FormatConverter {
   }) {
     builder.element('trans-unit', attributes: {'id': id}, nest: () {
       builder.element('source', nest: source);
-      if (target != null) {
-        builder.element('target', nest: target);
-      }
+      builder.element('target', nest: target ?? '');
 
       if (metadata != null) {
         final description = metadata['description'] as String?;
         if (description != null && description.isNotEmpty) {
-          builder.element('note',
-              attributes: {'priority': '1'}, nest: description);
+          builder.element('note', nest: description);
         }
 
         final placeholders = metadata['placeholders'] as Map<String, dynamic>?;
@@ -124,18 +164,14 @@ class XliffConverter implements FormatConverter {
             final name = placeholder.key;
             final props = placeholder.value as Map<String, dynamic>;
             final note = [
-              if (props['type'] != null) 'Type: ${props['type']}',
-              if (props['example'] != null) 'Example: ${props['example']}',
-              if (props['description'] != null)
-                'Description: ${props['description']}',
+              if (props['type'] != null) 'type: ${props['type']}',
+              if (props['example'] != null) 'example: ${props['example']}',
+              if (props['description'] != null) 'desc: ${props['description']}',
             ].join(', ');
 
             if (note.isNotEmpty) {
               builder.element('note',
-                  attributes: {
-                    'from': 'placeholder',
-                    'name': name,
-                  },
+                  attributes: {'from': 'placeholder', 'name': name},
                   nest: note);
             }
           }
@@ -144,7 +180,14 @@ class XliffConverter implements FormatConverter {
     });
   }
 
-  /// Saves XLIFF content to a file
+  dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
+    var current = map;
+    for (var i = 0; i < keys.length; i++) {
+      current = current[keys[i]] as Map<String, dynamic>? ?? {};
+    }
+    return current;
+  }
+
   void saveToFile(XmlDocument xliff, String outputPath) {
     final file = File(outputPath);
     file.writeAsStringSync(xliff.toXmlString(pretty: true));

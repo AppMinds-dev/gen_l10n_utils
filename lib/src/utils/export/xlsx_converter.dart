@@ -21,6 +21,20 @@ class XlsxConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to XLSX
+    final baseLanguageXlsx = convertToXlsx(
+      sourceLanguage: baseLanguage,
+      targetLanguage: baseLanguage,
+      sourceContent: baseContent,
+      targetContent: baseContent,
+    );
+
+    final baseOutputPath =
+        path.join(outputDir, 'xlsx', 'app_$baseLanguage.xlsx');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguageXlsx, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -132,20 +146,55 @@ class XlsxConverter implements FormatConverter {
       ..cellStyle = _headerStyle;
 
     var row = 1;
+    _processTranslations(
+      sheet: sheet,
+      sourceContent: sourceContent,
+      targetContent: targetContent,
+      rowIndex: row,
+    );
+  }
+
+  int _processTranslations({
+    required Sheet sheet,
+    required Map<String, dynamic> sourceContent,
+    required Map<String, dynamic> targetContent,
+    required int rowIndex,
+    String prefix = '',
+  }) {
+    var row = rowIndex;
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
-        sheet
-            .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-            .value = TextCellValue(key);
-        sheet
-            .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-            .value = TextCellValue(sourceContent[key] as String);
-        sheet
-            .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-            .value = TextCellValue(targetContent[key] as String? ?? '');
-        row++;
+        final value = sourceContent[key];
+        if (value is Map<String, dynamic>) {
+          // Handle nested structures
+          row = _processTranslations(
+            sheet: sheet,
+            sourceContent: value,
+            targetContent: targetContent[key] ?? {},
+            rowIndex: row,
+            prefix: prefix.isEmpty ? key : '$prefix.$key',
+          );
+        } else {
+          final fullKey = prefix.isEmpty ? key : '$prefix.$key';
+          final targetMap = prefix.isEmpty
+              ? targetContent
+              : _getNestedValue(targetContent, prefix.split('.'));
+
+          sheet
+              .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
+              .value = TextCellValue(fullKey);
+          sheet
+              .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
+              .value = TextCellValue(value as String);
+          sheet
+              .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
+              .value = TextCellValue(targetMap?[key] as String? ?? '');
+
+          row++;
+        }
       }
     }
+    return row;
   }
 
   void _writeMetadataSheet({
@@ -171,56 +220,95 @@ class XlsxConverter implements FormatConverter {
       ..cellStyle = _headerStyle;
 
     var row = 1;
+    _processMetadata(
+      sheet: sheet,
+      sourceContent: sourceContent,
+      rowIndex: row,
+    );
+  }
+
+  int _processMetadata({
+    required Sheet sheet,
+    required Map<String, dynamic> sourceContent,
+    required int rowIndex,
+    String prefix = '',
+  }) {
+    var row = rowIndex;
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
-        final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
-        if (metadata != null) {
-          final description = metadata['description'] as String?;
-          final placeholders =
-              metadata['placeholders'] as Map<String, dynamic>?;
+        final value = sourceContent[key];
+        if (value is Map<String, dynamic>) {
+          row = _processMetadata(
+            sheet: sheet,
+            sourceContent: value,
+            rowIndex: row,
+            prefix: prefix.isEmpty ? key : '$prefix.$key',
+          );
+        } else {
+          final fullKey = prefix.isEmpty ? key : '$prefix.$key';
+          final metadataKey = '@$key';
+          final metadata = sourceContent[metadataKey] as Map<String, dynamic>?;
 
-          if (placeholders != null) {
-            for (final placeholder in placeholders.entries) {
-              final details = [
-                if (placeholder.value['type'] != null)
-                  'Type: ${placeholder.value['type']}',
-                if (placeholder.value['example'] != null)
-                  'Example: ${placeholder.value['example']}',
-                if (placeholder.value['description'] != null)
-                  'Description: ${placeholder.value['description']}',
-              ].join('\n');
+          if (metadata != null) {
+            final description = metadata['description'] as String?;
+            final placeholders =
+                metadata['placeholders'] as Map<String, dynamic>?;
 
+            if (placeholders != null) {
+              for (final placeholder in placeholders.entries) {
+                final details = [
+                  if (placeholder.value['type'] != null)
+                    'type: ${placeholder.value['type']}',
+                  if (placeholder.value['example'] != null)
+                    'example: ${placeholder.value['example']}',
+                  if (placeholder.value['description'] != null)
+                    'desc: ${placeholder.value['description']}',
+                ].join(', ');
+
+                sheet
+                    .cell(CellIndex.indexByColumnRow(
+                        columnIndex: 0, rowIndex: row))
+                    .value = TextCellValue(fullKey);
+                sheet
+                    .cell(CellIndex.indexByColumnRow(
+                        columnIndex: 1, rowIndex: row))
+                    .value = TextCellValue(description ?? '');
+                sheet
+                    .cell(CellIndex.indexByColumnRow(
+                        columnIndex: 2, rowIndex: row))
+                    .value = TextCellValue(placeholder.key);
+                sheet
+                    .cell(CellIndex.indexByColumnRow(
+                        columnIndex: 3, rowIndex: row))
+                    .value = TextCellValue(details);
+
+                row++;
+              }
+            } else if (description != null && description.isNotEmpty) {
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-                  .value = TextCellValue(key);
+                  .value = TextCellValue(fullKey);
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-                  .value = TextCellValue(description ?? '');
-              sheet
-                  .cell(
-                      CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-                  .value = TextCellValue(placeholder.key);
-              sheet
-                  .cell(
-                      CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
-                  .value = TextCellValue(details);
+                  .value = TextCellValue(description);
 
               row++;
             }
-          } else {
-            sheet
-                .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-                .value = TextCellValue(key);
-            sheet
-                .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-                .value = TextCellValue(description ?? '');
-            row++;
           }
         }
       }
     }
+    return row;
+  }
+
+  dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
+    var current = map;
+    for (var i = 0; i < keys.length; i++) {
+      current = current[keys[i]] as Map<String, dynamic>? ?? {};
+    }
+    return current;
   }
 
   void saveToFile(Excel excel, String outputPath) {

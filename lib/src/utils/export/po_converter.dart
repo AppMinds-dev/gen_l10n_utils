@@ -15,6 +15,19 @@ class PoConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to PO
+    final baseLanguagePo = convertToPo(
+      sourceLanguage: baseLanguage,
+      targetLanguage: baseLanguage,
+      sourceContent: baseContent,
+      targetContent: baseContent,
+    );
+
+    final baseOutputPath = path.join(outputDir, 'po', 'app_$baseLanguage.po');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguagePo, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -35,7 +48,6 @@ class PoConverter implements FormatConverter {
     }
   }
 
-  /// Converts ARB content to PO format
   String convertToPo({
     required String sourceLanguage,
     required String targetLanguage,
@@ -45,107 +57,107 @@ class PoConverter implements FormatConverter {
     final buffer = StringBuffer();
 
     // Write PO header
-    _writeHeader(buffer, targetLanguage);
+    buffer.writeln('msgid ""');
+    buffer.writeln('msgstr ""');
+    buffer.writeln('"Project-Id-Version: 1.0\\n"');
+    buffer.writeln('"Content-Type: text/plain; charset=UTF-8\\n"');
+    buffer.writeln('"Language: $targetLanguage\\n"');
+    buffer.writeln('"Source-Language: $sourceLanguage\\n"');
+    buffer.writeln('"Plural-Forms: nplurals=2; plural=(n != 1);\\n"');
+    buffer.writeln();
 
-    // Process each translation entry
-    for (final key in sourceContent.keys) {
-      if (!key.startsWith('@')) {
-        final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
-        final source = sourceContent[key] as String;
-        final target = targetContent[key] as String?;
-
-        _writeEntry(
-          buffer,
-          key: key,
-          source: source,
-          target: target,
-          metadata: metadata,
-        );
-      }
-    }
+    _processTranslations(
+      buffer: buffer,
+      sourceContent: sourceContent,
+      targetContent: targetContent,
+    );
 
     return buffer.toString();
   }
 
-  void _writeHeader(StringBuffer buffer, String language) {
-    buffer.writeln('msgid ""');
-    buffer.writeln('msgstr ""');
-    buffer.writeln('"Project-Id-Version: gen_l10n_utils\\n"');
-    buffer.writeln('"Report-Msgid-Bugs-To: \\n"');
-    buffer
-        .writeln('"POT-Creation-Date: ${DateTime.now().toIso8601String()}\\n"');
-    buffer
-        .writeln('"PO-Revision-Date: ${DateTime.now().toIso8601String()}\\n"');
-    buffer.writeln('"Last-Translator: gen_l10n_utils\\n"');
-    buffer.writeln('"Language-Team: none\\n"');
-    buffer.writeln('"Language: $language\\n"');
-    buffer.writeln('"MIME-Version: 1.0\\n"');
-    buffer.writeln('"Content-Type: text/plain; charset=UTF-8\\n"');
-    buffer.writeln('"Content-Transfer-Encoding: 8bit\\n"');
-    buffer.writeln('"Plural-Forms: nplurals=2; plural=(n != 1);\\n"');
-    buffer.writeln();
-  }
-
-  void _writeEntry(
-    StringBuffer buffer, {
-    required String key,
-    required String source,
-    String? target,
-    Map<String, dynamic>? metadata,
+  void _processTranslations({
+    required StringBuffer buffer,
+    required Map<String, dynamic> sourceContent,
+    required Map<String, dynamic> targetContent,
+    String prefix = '',
   }) {
-    buffer.writeln();
+    for (final key in sourceContent.keys) {
+      if (!key.startsWith('@')) {
+        final value = sourceContent[key];
+        if (value is Map<String, dynamic>) {
+          // Handle nested structures
+          _processTranslations(
+            buffer: buffer,
+            sourceContent: value,
+            targetContent: targetContent[key] ?? {},
+            prefix: prefix.isEmpty ? key : '$prefix.$key',
+          );
+        } else {
+          final fullKey = prefix.isEmpty ? key : '$prefix.$key';
+          final metadataKey = '@$key';
+          final metadata = sourceContent[metadataKey] as Map<String, dynamic>?;
 
-    // Write comments
-    if (metadata != null) {
-      // Description as translator comments
-      final description = metadata['description'] as String?;
-      if (description != null && description.isNotEmpty) {
-        buffer.writeln('# $description');
-      }
+          // Write reference first
+          buffer.writeln('#: $fullKey');
 
-      // Placeholder information as extracted comments
-      final placeholders = metadata['placeholders'] as Map<String, dynamic>?;
-      if (placeholders != null) {
-        for (final placeholder in placeholders.entries) {
-          final name = placeholder.key;
-          final props = placeholder.value as Map<String, dynamic>;
+          // Write translator comments
+          if (metadata?['description'] != null) {
+            buffer.writeln('#, ${metadata!['description']}');
+          }
 
-          buffer.writeln('#. Placeholder: $name');
-          if (props['type'] != null) {
-            buffer.writeln('#. Type: ${props['type']}');
+          // Write placeholder information if present
+          if (metadata?['placeholders'] != null) {
+            final placeholders =
+                metadata!['placeholders'] as Map<String, dynamic>;
+            final placeholderComments = placeholders.entries.map((placeholder) {
+              final details = <String>[];
+              if (placeholder.value['type'] != null) {
+                details.add('type: ${placeholder.value['type']}');
+              }
+              if (placeholder.value['example'] != null) {
+                details.add('example: ${placeholder.value['example']}');
+              }
+              if (placeholder.value['description'] != null) {
+                details.add('desc: ${placeholder.value['description']}');
+              }
+              return '${placeholder.key} (${details.join(', ')})';
+            }).join('; ');
+
+            if (placeholderComments.isNotEmpty) {
+              buffer.writeln('#| placeholders: $placeholderComments');
+            }
           }
-          if (props['example'] != null) {
-            buffer.writeln('#. Example: ${props['example']}');
-          }
-          if (props['description'] != null) {
-            buffer.writeln('#. Description: ${props['description']}');
-          }
+
+          // Write message ID and translation
+          final targetMap = prefix.isEmpty
+              ? targetContent
+              : _getNestedValue(targetContent, prefix.split('.'));
+
+          buffer.writeln('msgid "${_escapePo(value as String)}"');
+          buffer.writeln(
+              'msgstr "${_escapePo(targetMap?[key] as String? ?? '')}"');
+          buffer.writeln();
         }
       }
     }
+  }
 
-    // Reference comment (location)
-    buffer.writeln('#: $key');
-
-    // Message context (optional, used for disambiguation)
-    buffer.writeln('msgctxt "$key"');
-
-    // Source string
-    buffer.writeln('msgid "${_escapePo(source)}"');
-
-    // Target string (translation)
-    buffer.writeln('msgstr "${_escapePo(target ?? '')}"');
+  dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
+    var current = map;
+    for (var i = 0; i < keys.length; i++) {
+      current = current[keys[i]] as Map<String, dynamic>? ?? {};
+    }
+    return current;
   }
 
   String _escapePo(String text) {
     return text
+        .replaceAll('\\', '\\\\')
         .replaceAll('"', '\\"')
         .replaceAll('\n', '\\n')
-        .replaceAll('\r', '\\r')
-        .replaceAll('\t', '\\t');
+        .replaceAll('\r', '\\r');
   }
 
-  /// Saves PO content to a file
   void saveToFile(String content, String outputPath) {
     final file = File(outputPath);
     file.writeAsStringSync(content);
