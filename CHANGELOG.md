@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2024-03-19
+### Added
+- Support for YAML format export (`yaml`) via the export command
+- New examples in README for YAML format export
+- New file extension `.yaml` for exported files
+- Documentation for YAML format in the README
+- Support for metadata preservation in YAML format including descriptions and placeholders
+
+### Changed
+- Updated README with YAML format examples and documentation
+- Removed deprecated conversion methods from ArbConverter class
+- Simplified ArbConverter implementation
+- Made format handling more consistent across converters
+
+### Removed
+- Deprecated format-specific conversion methods in ArbConverter
+
 ## [1.3.0] - 2024-03-19
 ### Added
 - Support for Gettext PO format export (`po`) via the export command

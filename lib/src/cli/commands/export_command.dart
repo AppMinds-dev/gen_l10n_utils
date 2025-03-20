@@ -19,7 +19,7 @@ class ExportCommand extends Command<int> {
       'format',
       abbr: 'f',
       help:
-          'Output format (xlf, json, po). If not specified, uses the format from config or defaults to xlf.',
+          'Output format (xlf, json, po, yaml). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
@@ -114,7 +114,7 @@ class ExportCommand extends Command<int> {
     try {
       final converter = ArbConverter();
       converter.convert(
-        format: format,
+        format: format.toLowerCase(),
         baseLanguage: baseLanguage,
         languages: languages,
         inputDir: arbDir.path,
