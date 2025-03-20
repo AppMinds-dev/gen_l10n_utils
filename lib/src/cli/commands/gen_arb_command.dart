@@ -11,8 +11,9 @@ import 'package:gen_l10n_utils/src/utils/load_config.dart';
 class MergeResult {
   final Map<String, dynamic> content;
   final Map<String, List<ConflictEntry>> conflicts;
+  final Map<String, dynamic> originalContent;
 
-  MergeResult(this.content, this.conflicts);
+  MergeResult(this.content, this.conflicts, this.originalContent);
 }
 
 /// Entry representing a key conflict
@@ -81,7 +82,6 @@ class GenArbCommand extends Command<int> {
         outputDir.createSync(recursive: true);
       }
 
-      // Create metadata directory
       final metadataDir = Directory(p.join(outputDir.path, 'metadata'));
       if (!metadataDir.existsSync()) {
         metadataDir.createSync(recursive: true);
@@ -116,7 +116,7 @@ class GenArbCommand extends Command<int> {
           final sortedSimplified = _sortMapByKeys(simplifiedContent);
 
           // Generate metadata version
-          final metadataContent = _createMetadataArb(result.content);
+          final metadataContent = _createMetadataArb(result.originalContent);
           final sortedMetadata = _sortMapByKeys(metadataContent);
 
           // Write simplified version
@@ -151,61 +151,25 @@ class GenArbCommand extends Command<int> {
 
   Map<String, dynamic> _createSimplifiedArb(Map<String, dynamic> content) {
     final simplified = <String, dynamic>{};
-
     content.forEach((key, value) {
-      if (!key.contains('.')) {
+      if (!key.startsWith('@')) {
         simplified[key] = value;
       }
     });
-
     return simplified;
   }
 
   Map<String, dynamic> _createMetadataArb(Map<String, dynamic> content) {
     final metadata = <String, dynamic>{};
-
-    // Process all keys to build proper metadata structure
     content.forEach((key, value) {
-      if (!key.contains('.')) {
-        // Handle base translation keys
-        metadata[key] = value;
-      } else if (key.startsWith('@')) {
-        // Handle metadata
-        final parts = key.split('.');
-        final baseKey = parts[0].substring(1); // Remove @ from start
-
-        if (!metadata.containsKey('@$baseKey')) {
-          metadata['@$baseKey'] = {
-            'description': '',
-            'placeholders': {},
-          };
-        }
-
-        if (parts.length > 2 && parts[1] == 'placeholders') {
-          // Handle placeholder metadata
-          final placeholder = parts[2];
-          final property = parts.length > 3 ? parts[3] : null;
-
-          if (!metadata['@$baseKey']['placeholders'].containsKey(placeholder)) {
-            metadata['@$baseKey']['placeholders'][placeholder] = {};
-          }
-
-          if (property != null) {
-            metadata['@$baseKey']['placeholders'][placeholder][property] =
-                value;
-          }
-        } else if (parts.length == 2 && parts[1] == 'description') {
-          // Handle description
-          metadata['@$baseKey']['description'] = value;
-        }
-      }
+      metadata[key] = value;
     });
-
     return metadata;
   }
 
   MergeResult mergeArbFilesWithConflictDetection(List<File> arbFiles) {
     final mergedContent = <String, dynamic>{};
+    final originalContent = <String, dynamic>{};
     final conflicts = <String, List<ConflictEntry>>{};
     final keySourceFiles = <String, String>{};
 
@@ -213,6 +177,15 @@ class GenArbCommand extends Command<int> {
       final content = file.readAsStringSync();
       try {
         final jsonContent = jsonDecode(content) as Map<String, dynamic>;
+
+        // Store the original unflattened content for metadata
+        jsonContent.forEach((key, value) {
+          if (!originalContent.containsKey(key)) {
+            originalContent[key] = value;
+          }
+        });
+
+        // Process flattened content for simplified version
         final flattened = flattenJson(jsonContent);
 
         for (final entry in flattened.entries) {
@@ -242,7 +215,7 @@ class GenArbCommand extends Command<int> {
       }
     }
 
-    return MergeResult(mergedContent, conflicts);
+    return MergeResult(mergedContent, conflicts, originalContent);
   }
 
   void reportConflicts(
