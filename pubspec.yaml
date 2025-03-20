@@ -1,6 +1,6 @@
 name: gen_l10n_utils
 description: A CLI tool for merging, flattening, and managing gen_l10n translation files.
-version: 1.3.0
+version: 1.4.0
 repository: https://github.com/AppMinds-dev/gen_l10n_utils
 homepage: https://appminds.dev
 documentation: https://github.com/AppMinds-dev/gen_l10n_utils/wiki
