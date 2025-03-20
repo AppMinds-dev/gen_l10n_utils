@@ -15,6 +15,18 @@ class JsonConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to JSON
+    final baseLanguageJson = convertToJson(
+      sourceContent: baseContent,
+      targetContent: baseContent,
+    );
+
+    final baseOutputPath =
+        path.join(outputDir, 'json', 'app_$baseLanguage.json');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguageJson, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -43,15 +55,27 @@ class JsonConverter implements FormatConverter {
     // Process each translation entry
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
-        final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
-        final source = sourceContent[key] as String;
-        final target = targetContent[key] as String?;
+        final metadataKey = '@$key';
+        final metadata = sourceContent[metadataKey] as Map<String, dynamic>?;
 
-        translations[key] = _createTranslationEntry(
-          source: source,
-          target: target,
-          metadata: metadata,
-        );
+        final source = sourceContent[key];
+        final target = targetContent[key];
+
+        if (source is Map<String, dynamic>) {
+          // Handle nested structures
+          translations[key] = _createNestedTranslationEntry(
+            source: source,
+            target: target as Map<String, dynamic>?,
+            metadata: metadata,
+          );
+        } else {
+          // Handle simple string translations
+          translations[key] = _createTranslationEntry(
+            source: source as String,
+            target: target as String?,
+            metadata: metadata,
+          );
+        }
       }
     }
 
@@ -61,6 +85,44 @@ class JsonConverter implements FormatConverter {
         'tool': 'gen_l10n_utils',
       },
       'translations': translations,
+    };
+  }
+
+  Map<String, dynamic> _createNestedTranslationEntry({
+    required Map<String, dynamic> source,
+    Map<String, dynamic>? target,
+    Map<String, dynamic>? metadata,
+  }) {
+    final nestedTranslations = <String, dynamic>{};
+
+    source.forEach((key, sourceValue) {
+      if (!key.startsWith('@')) {
+        final nestedMetadataKey = '@$key';
+        final nestedMetadata =
+            source[nestedMetadataKey] as Map<String, dynamic>?;
+
+        if (sourceValue is Map<String, dynamic>) {
+          nestedTranslations[key] = _createNestedTranslationEntry(
+            source: sourceValue,
+            target: target?[key] as Map<String, dynamic>?,
+            metadata: nestedMetadata,
+          );
+        } else {
+          nestedTranslations[key] = _createTranslationEntry(
+            source: sourceValue as String,
+            target: target?[key] as String?,
+            metadata: nestedMetadata,
+          );
+        }
+      }
+    });
+
+    return {
+      'translations': nestedTranslations,
+      if (metadata != null) ...{
+        if (metadata['description'] != null)
+          'description': metadata['description'],
+      },
     };
   }
 

@@ -8,6 +8,23 @@ class CsvConverter implements FormatConverter {
   static const String _quote = '"';
   static const String _escape = '""';
 
+  Map<String, dynamic> _flattenJson(Map<String, dynamic> json,
+      {String prefix = ''}) {
+    final result = <String, dynamic>{};
+
+    json.forEach((key, value) {
+      final newKey = prefix.isEmpty ? key : '$prefix.$key';
+
+      if (value is Map<String, dynamic>) {
+        result.addAll(_flattenJson(value, prefix: newKey));
+      } else {
+        result[newKey] = value;
+      }
+    });
+
+    return result;
+  }
+
   @override
   void convert({
     required String baseLanguage,
@@ -19,6 +36,19 @@ class CsvConverter implements FormatConverter {
       path.join(inputDir, 'metadata', 'app_${baseLanguage}_metadata.arb'),
     );
 
+    // Convert base language to CSV
+    final baseLanguageCsvContent = convertToCsv(
+      sourceLanguage: baseLanguage,
+      targetLanguage: baseLanguage,
+      sourceContent: _flattenJson(baseContent),
+      targetContent: _flattenJson(baseContent),
+    );
+
+    final baseOutputPath = path.join(outputDir, 'csv', 'app_$baseLanguage.csv');
+    _ensureDirectoryExists(baseOutputPath);
+    saveToFile(baseLanguageCsvContent, baseOutputPath);
+
+    // Convert other languages
     for (final language in languages) {
       if (language == baseLanguage) continue;
 
@@ -29,8 +59,8 @@ class CsvConverter implements FormatConverter {
       final csvContent = convertToCsv(
         sourceLanguage: baseLanguage,
         targetLanguage: language,
-        sourceContent: baseContent,
-        targetContent: targetContent,
+        sourceContent: _flattenJson(baseContent),
+        targetContent: _flattenJson(targetContent),
       );
 
       final outputPath = path.join(outputDir, 'csv', 'app_$language.csv');
@@ -61,7 +91,13 @@ class CsvConverter implements FormatConverter {
     // Process all translation keys
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
-        final metadata = sourceContent['@$key'] as Map<String, dynamic>?;
+        final metadataKey = '@${key.split('.').last}';
+        final parentKey =
+            key.contains('.') ? key.substring(0, key.lastIndexOf('.')) : '';
+        final metadata = parentKey.isEmpty
+            ? sourceContent[metadataKey] as Map<String, dynamic>?
+            : sourceContent['$parentKey.$metadataKey'] as Map<String, dynamic>?;
+
         final description = metadata?['description'] as String?;
         final placeholders = metadata?['placeholders'] as Map<String, dynamic>?;
 
