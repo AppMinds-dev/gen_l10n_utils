@@ -329,63 +329,38 @@ class TranslateCommand extends Command<int> {
       final Map<String, dynamic> sourceData = json.decode(sourceContent);
       final Map<String, dynamic> targetData = json.decode(targetContent);
 
-      // Create a new map for the updated content
-      final Map<String, dynamic> updatedTranslation = {};
-      int addedKeys = 0;
-      int removedKeys = 0;
-      int keptKeys = 0;
+      final updatedTranslation = _processNode(sourceData, targetData);
 
-      // First, process all keys from the source file
-      sourceData.forEach((key, value) {
-        if (key.startsWith('@')) {
-          // Always update metadata keys from source
-          updatedTranslation[key] = value;
-
-          // If it's a metadata key, check if the corresponding message key exists
-          final messageKey = key.substring(1);
-          if (sourceData.containsKey(messageKey)) {
-            // Metadata handling is done in sync with the message key
-          } else {
-            // Handle orphaned metadata (rare case)
-            addedKeys++;
-          }
-        } else {
-          // For regular keys (message keys)
-          if (targetData.containsKey(key)) {
-            // Keep existing translation for keys that exist in both
-            updatedTranslation[key] = targetData[key];
-            keptKeys++;
-          } else {
-            // For new keys, add them with empty values or placeholders
-            if (value is Map<String, dynamic>) {
-              updatedTranslation[key] = value;
-            } else if (value is String) {
-              updatedTranslation[key] = '';
-            } else {
-              updatedTranslation[key] = value;
-            }
-            addedKeys++;
-          }
-        }
-      });
-
-      // Check for keys in target that don't exist in source (these will be removed)
-      targetData.forEach((key, value) {
-        if (!sourceData.containsKey(key) && !key.startsWith('@')) {
-          // Skip keys that no longer exist in source
-          removedKeys++;
-        }
-      });
-
-      // Write the updated translation file with indentation
       final encoder = JsonEncoder.withIndent('  ');
       targetFile.writeAsStringSync(encoder.convert(updatedTranslation));
-
-      print(
-          'Updated: $targetPath (added: $addedKeys, removed: $removedKeys, kept: $keptKeys)');
     } catch (e) {
       throw Exception('Error processing files $sourcePath and $targetPath: $e');
     }
+  }
+
+  Map<String, dynamic> _processNode(
+    Map<String, dynamic> sourceNode,
+    Map<String, dynamic> targetNode,
+  ) {
+    final Map<String, dynamic> result = {};
+
+    for (final key in sourceNode.keys) {
+      final sourceValue = sourceNode[key];
+      final targetValue = targetNode[key];
+
+      if (sourceValue is Map<String, dynamic>) {
+        // Handle nested structures
+        result[key] = _processNode(
+          sourceValue,
+          (targetValue as Map<String, dynamic>?) ?? {},
+        );
+      } else {
+        // For non-map values, keep existing translation or use empty string
+        result[key] = targetNode.containsKey(key) ? targetValue : '';
+      }
+    }
+
+    return result;
   }
 
   Future<void> createEmptyTranslationFile(

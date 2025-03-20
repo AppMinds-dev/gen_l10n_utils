@@ -19,7 +19,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.7.3
+  gen_l10n_utils: ^1.7.4
 ```
 
 Or install it globally:

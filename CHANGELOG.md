@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.3] - 2025-03-21
+## [1.7.4] - 2025-03-20
+
+### Fixed
+- `translate` command now correctly handles nested structures:
+  - Properly copies nested keys from base language
+  - Preserves existing translations in target files
+  - Removes keys that don't exist in source anymore
+  - Sets empty values only for new keys
+
+## [1.7.3] - 2025-03-20
 
 ### Changed
 - Removed base language file generation from format converters:
