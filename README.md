@@ -7,7 +7,7 @@ A command-line utility for managing Dart/Flutter app localizations with enhanced
 - Find and merge ARB files from multiple directories
 - Generate simplified ARB files for Flutter localization
 - Generate metadata-rich ARB files for export
-- Export to **XLIFF**, **JSON**, **PO**, and **YAML** formats with full metadata preservation
+- Export to **XLIFF**, **JSON**, **PO**, **YAML**, and **XLSX** formats with full metadata preservation
 - Automatic conflict detection and resolution
 - Support for nested JSON structures
 - Configurable via YAML
@@ -17,7 +17,7 @@ A command-line utility for managing Dart/Flutter app localizations with enhanced
 - `create-config`: Creates a configuration file in your project root
 - `gen-arb`: Generates and merges ARB files from your project
 - `translate`: Creates or updates translation files for specific languages
-- `export`: Exports ARB files to XLIFF, JSON, PO, or YAML format with metadata preservation
+- `export`: Exports ARB files to XLIFF, JSON, PO, YAML, or XLSX format with metadata preservation
 
 ## Installation
 
@@ -25,7 +25,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.4.0
+  gen_l10n_utils: ^1.5.0
 ```
 
 Or install it globally:
@@ -142,6 +142,8 @@ dart run gen_l10n_utils export -f json
 dart run gen_l10n_utils export -f po
 # or
 dart run gen_l10n_utils export -f yaml
+# or
+dart run gen_l10n_utils export -f xlsx
 
 # Export specific languages
 dart run gen_l10n_utils export --language en,fr,de
@@ -238,8 +240,20 @@ translations:
         description: The user's display name
 ```
 
+Example XLSX output (`lib/l10n/xlsx/app_de.xlsx`):
+- Each Excel file contains three sheets:
+    - **Overview**: Contains file metadata, source/target languages, and export information
+    - **Translations**: Main sheet with translation keys, source text and target translations
+    - **Metadata**: Detailed information about descriptions and placeholders
+
+The XLSX format is especially useful for:
+- Sharing translations with non-technical translators
+- Working offline with translation data
+- Having a single file with all related translation information
+- Bulk editing in spreadsheet applications
+
 Options:
-- `--format` or `-f`: Output format (currently supported: `xlf`, `json`, `po`, `yaml`)
+- `--format` or `-f`: Output format (currently supported: `xlf`, `json`, `po`, `yaml`, `xlsx`)
 - `--language` or `-l`: Specific language(s) to export (comma-separated)
 
 Currently supported export formats:
@@ -247,6 +261,7 @@ Currently supported export formats:
 - `json`: Simplified JSON format with metadata structured for easy processing
 - `po`: Gettext PO format with comments for metadata preservation
 - `yaml`: YAML format with structured metadata for easy reading and editing
+- `xlsx`: Excel format with separate sheets for translations and metadata
 
 ## Directory Structure Requirements
 
