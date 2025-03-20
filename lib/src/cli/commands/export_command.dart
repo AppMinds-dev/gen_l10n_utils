@@ -19,7 +19,7 @@ class ExportCommand extends Command<int> {
       'format',
       abbr: 'f',
       help:
-          'Output format (xlf, json, po, yaml, xlsx). If not specified, uses the format from config or defaults to xlf.',
+          'Output format (xlf, json, po, yaml, xlsx, csv). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
@@ -129,9 +129,20 @@ class ExportCommand extends Command<int> {
         outputDir: targetDir.parent.path,
       );
 
-      final outputPath = format == 'xlsx'
-          ? '${targetDir.path} (with Overview, Translations, and Metadata sheets)'
-          : targetDir.path;
+      // Customize output message based on format
+      String outputPath;
+      switch (format) {
+        case 'xlsx':
+          outputPath =
+              '${targetDir.path} (with Overview, Translations, and Metadata sheets)';
+          break;
+        case 'csv':
+          outputPath =
+              '${targetDir.path} (with key, source, target, description and placeholder columns)';
+          break;
+        default:
+          outputPath = targetDir.path;
+      }
 
       print(
           'Successfully exported to $outputPath with descriptions and placeholder metadata');
