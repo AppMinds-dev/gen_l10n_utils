@@ -5,6 +5,11 @@ import 'package:path/path.dart' as path;
 import 'package:gen_l10n_utils/src/utils/export/format_converter.dart';
 
 class XlsxConverter implements FormatConverter {
+  final _headerStyle = CellStyle(
+    backgroundColorHex: ExcelColor.grey300,
+    bold: true,
+  );
+
   @override
   void convert({
     required String baseLanguage,
@@ -36,7 +41,6 @@ class XlsxConverter implements FormatConverter {
     }
   }
 
-  /// Converts ARB content to Excel format
   Excel convertToXlsx({
     required String sourceLanguage,
     required String targetLanguage,
@@ -45,7 +49,6 @@ class XlsxConverter implements FormatConverter {
   }) {
     final excel = Excel.createExcel();
 
-    // Create overview sheet
     final overview = excel['Overview'];
     _writeOverviewSheet(
       sheet: overview,
@@ -53,7 +56,6 @@ class XlsxConverter implements FormatConverter {
       targetLanguage: targetLanguage,
     );
 
-    // Create translations sheet
     final translations = excel['Translations'];
     _writeTranslationsSheet(
       sheet: translations,
@@ -61,7 +63,6 @@ class XlsxConverter implements FormatConverter {
       targetContent: targetContent,
     );
 
-    // Create metadata sheet
     final metadata = excel['Metadata'];
     _writeMetadataSheet(
       sheet: metadata,
@@ -69,9 +70,7 @@ class XlsxConverter implements FormatConverter {
     );
 
     // Remove default sheet
-    // if (excel.sheets.containsKey('Sheet1')) {
-    //   excel.delete('Sheet1');
-    // }
+    excel.delete('Sheet1');
 
     return excel;
   }
@@ -81,24 +80,16 @@ class XlsxConverter implements FormatConverter {
     required String sourceLanguage,
     required String targetLanguage,
   }) {
-    // Set column widths
     sheet.setColumnWidth(0, 20);
     sheet.setColumnWidth(1, 40);
 
-    // Write header
-    final headerStyle = CellStyle(
-      bold: true,
-      backgroundColorHex: '#E0E0E0',
-    );
-
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
-      ..value = 'Property'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Property')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
-      ..value = 'Value'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Value')
+      ..cellStyle = _headerStyle;
 
-    // Write metadata
     var row = 1;
     _writeOverviewRow(sheet, row++, 'Tool', 'gen_l10n_utils');
     _writeOverviewRow(sheet, row++, 'Format Version', '1.0');
@@ -115,10 +106,10 @@ class XlsxConverter implements FormatConverter {
   void _writeOverviewRow(Sheet sheet, int row, String key, String value) {
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-        .value = key;
+        .value = TextCellValue(key);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-        .value = value;
+        .value = TextCellValue(value);
   }
 
   void _writeTranslationsSheet({
@@ -126,40 +117,32 @@ class XlsxConverter implements FormatConverter {
     required Map<String, dynamic> sourceContent,
     required Map<String, dynamic> targetContent,
   }) {
-    // Set column widths
     sheet.setColumnWidth(0, 30);
     sheet.setColumnWidth(1, 50);
     sheet.setColumnWidth(2, 50);
 
-    // Write header
-    final headerStyle = CellStyle(
-      bold: true,
-      backgroundColorHex: '#E0E0E0',
-    );
-
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
-      ..value = 'Key'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Key')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
-      ..value = 'Source'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Source')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
-      ..value = 'Target'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Target')
+      ..cellStyle = _headerStyle;
 
-    // Write translations
     var row = 1;
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
         sheet
             .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-            .value = key;
+            .value = TextCellValue(key);
         sheet
             .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-            .value = sourceContent[key] as String;
+            .value = TextCellValue(sourceContent[key] as String);
         sheet
             .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-            .value = targetContent[key] as String? ?? '';
+            .value = TextCellValue(targetContent[key] as String? ?? '');
         row++;
       }
     }
@@ -169,32 +152,24 @@ class XlsxConverter implements FormatConverter {
     required Sheet sheet,
     required Map<String, dynamic> sourceContent,
   }) {
-    // Set column widths
     sheet.setColumnWidth(0, 30);
     sheet.setColumnWidth(1, 40);
     sheet.setColumnWidth(2, 40);
     sheet.setColumnWidth(3, 40);
 
-    // Write header
-    final headerStyle = CellStyle(
-      bold: true,
-      backgroundColorHex: '#E0E0E0',
-    );
-
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
-      ..value = 'Key'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Key')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
-      ..value = 'Description'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Description')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
-      ..value = 'Placeholder'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Placeholder')
+      ..cellStyle = _headerStyle;
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 0))
-      ..value = 'Placeholder Details'
-      ..cellStyle = headerStyle;
+      ..value = TextCellValue('Placeholder Details')
+      ..cellStyle = _headerStyle;
 
-    // Write metadata
     var row = 1;
     for (final key in sourceContent.keys) {
       if (!key.startsWith('@')) {
@@ -218,29 +193,29 @@ class XlsxConverter implements FormatConverter {
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-                  .value = key;
+                  .value = TextCellValue(key);
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-                  .value = description ?? '';
+                  .value = TextCellValue(description ?? '');
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-                  .value = placeholder.key;
+                  .value = TextCellValue(placeholder.key);
               sheet
                   .cell(
                       CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
-                  .value = details;
+                  .value = TextCellValue(details);
 
               row++;
             }
           } else {
             sheet
                 .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-                .value = key;
+                .value = TextCellValue(key);
             sheet
                 .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-                .value = description ?? '';
+                .value = TextCellValue(description ?? '');
             row++;
           }
         }
@@ -248,7 +223,6 @@ class XlsxConverter implements FormatConverter {
     }
   }
 
-  /// Saves Excel content to a file
   void saveToFile(Excel excel, String outputPath) {
     final file = File(outputPath);
     file.writeAsBytesSync(excel.encode()!);
