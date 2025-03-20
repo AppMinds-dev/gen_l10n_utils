@@ -19,7 +19,7 @@ class ExportCommand extends Command<int> {
       'format',
       abbr: 'f',
       help:
-          'Output format (xlf, json, po, yaml). If not specified, uses the format from config or defaults to xlf.',
+          'Output format (xlf, json, po, yaml, xlsx). If not specified, uses the format from config or defaults to xlf.',
     );
     argParser.addOption(
       'language',
@@ -52,14 +52,14 @@ class ExportCommand extends Command<int> {
     // Get base language from config or default to 'en'
     final baseLanguage = config['base_language'] as String? ?? 'en';
 
-    final List<String> languages;
+    // Get languages to process
+    List<String> allLanguages;
     if (languageParam != null) {
-      languages = languageParam.split(',').map((e) => e.trim()).toList();
+      allLanguages = languageParam.split(',').map((e) => e.trim()).toList();
     } else {
-      // Get all languages from config
       try {
-        languages = List<String>.from(config['languages'] ?? []);
-        if (languages.isEmpty) {
+        allLanguages = List<String>.from(config['languages'] ?? []);
+        if (allLanguages.isEmpty) {
           print('Error: No languages found in configuration.');
           return 1;
         }
@@ -69,9 +69,17 @@ class ExportCommand extends Command<int> {
       }
     }
 
+    // Create a new list with target languages (excluding base language)
+    final targetLanguages =
+        allLanguages.where((l) => l != baseLanguage).toList();
+    if (targetLanguages.isEmpty) {
+      print('Error: No target languages to process.');
+      return 1;
+    }
+
     // Check if ARB files exist (both simplified and metadata versions)
     final arbDir = Directory('lib/l10n');
-    if (!arbDir.existsSync() || !_arbFilesExist(arbDir, languages)) {
+    if (!arbDir.existsSync() || !_arbFilesExist(arbDir, allLanguages)) {
       print('Some or all ARB files are missing.');
       stdout.write('Do you want to create them? (y/n): ');
       final response = stdin.readLineSync()?.toLowerCase();
@@ -116,13 +124,17 @@ class ExportCommand extends Command<int> {
       converter.convert(
         format: format.toLowerCase(),
         baseLanguage: baseLanguage,
-        languages: languages,
+        languages: targetLanguages,
         inputDir: arbDir.path,
         outputDir: targetDir.parent.path,
       );
 
+      final outputPath = format == 'xlsx'
+          ? '${targetDir.path} (with Overview, Translations, and Metadata sheets)'
+          : targetDir.path;
+
       print(
-          'Successfully exported to ${targetDir.path} with descriptions and placeholder metadata');
+          'Successfully exported to $outputPath with descriptions and placeholder metadata');
       return 0;
     } catch (e) {
       if (e is FormatException) {

@@ -3,6 +3,7 @@ import 'package:gen_l10n_utils/src/utils/export/xliff_converter.dart';
 import 'package:gen_l10n_utils/src/utils/export/json_converter.dart';
 import 'package:gen_l10n_utils/src/utils/export/po_converter.dart';
 import 'package:gen_l10n_utils/src/utils/export/yaml_converter.dart';
+import 'package:gen_l10n_utils/src/utils/export/xlsx_converter.dart';
 
 class ArbConverter {
   final Map<String, FormatConverter> _converters = {
@@ -10,6 +11,7 @@ class ArbConverter {
     'json': JsonConverter(),
     'po': PoConverter(),
     'yaml': YamlConverter(),
+    'xlsx': XlsxConverter(),
   };
 
   /// Converts ARB files to the specified format

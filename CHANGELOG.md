@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0] - 2024-03-19
+## [1.5.0] - 2025-03-20
+
+### Added
+- New XLSX export format with `xlsx` option for the export command
+- Excel exports feature three organized sheets:
+  - Overview sheet with file metadata and language information
+  - Translations sheet with key, source, and target columns
+  - Metadata sheet with detailed information about descriptions and placeholders
+- Documentation for XLSX export format in README.md
+
+### Changed
+- Updated export command to support the new XLSX format
+- Enhanced output path reporting for XLSX files to indicate the sheet structure
+
+## [1.4.0] - 2025-03-20
 ### Added
 - Support for YAML format export (`yaml`) via the export command
 - New examples in README for YAML format export
@@ -21,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Deprecated format-specific conversion methods in ArbConverter
 
-## [1.3.0] - 2024-03-19
+## [1.3.0] - 2025-03-19
 ### Added
 - Support for Gettext PO format export (`po`) via the export command
 - New examples in README for PO format export
@@ -41,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration file handling in export command
 - Error messages for missing configuration files
 
-## [1.2.0] - 2024-03-19
+## [1.2.0] - 2025-03-19
 ### Added
 - Support for JSON format export
 - New examples in README for JSON format
@@ -52,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated command-line help text
 - Improved configuration file handling
 
-## [1.1.0] - 2024-03-19
+## [1.1.0] - 2025-03-19
 ### Added
 - Support for XLIFF format export
 - Configuration file support
@@ -65,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced file structure support
 
 
-## [1.0.4] - 2024-03-19
+## [1.0.4] - 2025-03-19
 
 ### Fixed
 - Permission errors in GitHub Actions workflow:
@@ -79,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Core functionality stabilization in progress
     - Tests to be re-enabled in future releases
 
-## [1.0.3] - 2024-03-18
+## [1.0.3] - 2025-03-18
 
 ### Added
 - Duplicate key detection and conflict reporting within each language
@@ -90,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Issue with duplicate keys being overwritten incorrectly
 
-## [1.0.2] - 2024-03-18
+## [1.0.2] - 2025-03-18
 
 ### Added
 - Support for more flexible project structures
@@ -101,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Improved language detection by checking directory paths
 
-## [1.0.0] - 2024-03-18
+## [1.0.0] - 2025-03-18
 ### Added
 - Initial release
 - Support for ARB file generation
