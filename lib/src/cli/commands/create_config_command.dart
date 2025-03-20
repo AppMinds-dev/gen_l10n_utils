@@ -21,7 +21,7 @@ class CreateConfigCommand extends Command<int> {
     argParser.addOption(
       'base-language',
       abbr: 'b',
-      help: 'Default language code (ISO 639-1)',
+      help: 'Base language code (ISO 639-1)',
       defaultsTo: 'en',
     );
     argParser.addMultiOption(
