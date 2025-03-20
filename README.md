@@ -25,7 +25,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  gen_l10n_utils: ^1.5.0
+  gen_l10n_utils: ^1.5.1
 ```
 
 Or install it globally:
