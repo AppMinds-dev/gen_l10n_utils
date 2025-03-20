@@ -70,7 +70,7 @@ void main() {
   late MockFile mockConfigFile;
   late MockDirectory mockLibDir;
   late MockFile mockEnFile;
-  late MockFile mockFrFile;
+  // late MockFile mockFrFile;
   late MockDirectory mockL10nDir;
   late MockDirectory mockEnDir;
   late MockDirectory mockFrDir;
@@ -103,7 +103,7 @@ languages:
     when(mockFrDir.path).thenReturn('mock/lib/l10n/fr');
 
     mockEnFile = MockFile();
-    mockFrFile = MockFile();
+    // mockFrFile = MockFile();
 
     testHelper.testFile = mockConfigFile;
     testHelper.testLibDir = mockLibDir;
