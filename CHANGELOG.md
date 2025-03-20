@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2025-03-20
+
+### Fixed
+- Fixed ARB file generation where nested translation keys were not properly handled:
+  - Simplified ARB files (`app_*.arb`) now correctly include flattened nested keys while excluding metadata keys (starting with `@`)
+  - Metadata ARB files (`metadata/app_*_metadata.arb`) now preserve the original nested structure
+
 ## [1.7.0] - 2025-03-20
 
 ### Changed
