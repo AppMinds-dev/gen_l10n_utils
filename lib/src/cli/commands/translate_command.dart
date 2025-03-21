@@ -106,7 +106,7 @@ class TranslateCommand extends Command<int> {
             continue; // Skip the base language
           }
           print(
-              'ℹ️  Processing translations for $language based on $baseLanguage...');
+              '���️  Processing translations for $language based on $baseLanguage...');
           final result = await processTranslationFiles(baseLanguage, language);
           totalCreated += result.created;
           totalUpdated += result.updated;
@@ -261,8 +261,11 @@ class TranslateCommand extends Command<int> {
         final targetFile = createFile(targetFilePath);
         if (targetFile.existsSync()) {
           // Update existing file with missing keys
-          await updateTranslationFile(arbFile.path, targetFilePath);
-          updatedFiles++;
+          final updated =
+              await updateTranslationFile(arbFile.path, targetFilePath);
+          if (updated) {
+            updatedFiles++;
+          }
         } else {
           // Create new empty translation file
           await createEmptyTranslationFile(arbFile.path, targetFilePath);
@@ -309,7 +312,7 @@ class TranslateCommand extends Command<int> {
     return languageDirs;
   }
 
-  Future<void> updateTranslationFile(
+  Future<bool> updateTranslationFile(
       String sourcePath, String targetPath) async {
     final File sourceFile = createFile(sourcePath);
     final File targetFile = createFile(targetPath);
@@ -332,7 +335,13 @@ class TranslateCommand extends Command<int> {
       final updatedTranslation = _processNode(sourceData, targetData);
 
       final encoder = JsonEncoder.withIndent('  ');
-      targetFile.writeAsStringSync(encoder.convert(updatedTranslation));
+      final updatedContent = encoder.convert(updatedTranslation);
+
+      if (updatedContent != targetContent) {
+        targetFile.writeAsStringSync(updatedContent);
+        return true;
+      }
+      return false;
     } catch (e) {
       throw Exception('Error processing files $sourcePath and $targetPath: $e');
     }
@@ -365,6 +374,13 @@ class TranslateCommand extends Command<int> {
         } else {
           result[key] = '';
         }
+      }
+    }
+
+    // Remove keys that are in the target but not in the source
+    for (final key in targetNode.keys) {
+      if (!sourceNode.containsKey(key) && !key.startsWith('@')) {
+        result.remove(key);
       }
     }
 

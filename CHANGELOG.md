@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.6] - 2025-03-21
+
+### Fixed
+- Translation update logic now preserves existing translations for keys that still exist in the source language.
+- Obsolete keys (no longer in the source .arb files) are now properly removed from target translation files.
+- Newly added keys from the source are now initialized with empty strings in the target translations.
+
 ## [1.7.5] - 2025-03-21
 
 ### Fixed
