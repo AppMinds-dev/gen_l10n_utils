@@ -370,7 +370,7 @@ class TranslateCommand extends Command<int> {
       } else {
         // For translatable string values
         if (targetNode.containsKey(key)) {
-          result[key] = targetValue;
+          result[key] = targetValue.isNotEmpty ? targetValue : '';
         } else {
           result[key] = '';
         }
@@ -400,26 +400,7 @@ class TranslateCommand extends Command<int> {
       final Map<String, dynamic> jsonData = json.decode(sourceContent);
 
       // Create a new map with the same keys but empty values
-      final Map<String, dynamic> emptyTranslation = {};
-
-      jsonData.forEach((key, value) {
-        // Preserve metadata keys (starting with @)
-        if (key.startsWith('@')) {
-          emptyTranslation[key] = value;
-        }
-        // Preserve placeholders or ICU structures
-        else if (value is Map<String, dynamic>) {
-          emptyTranslation[key] = value;
-        }
-        // For translatable strings, use empty value
-        else if (value is String) {
-          emptyTranslation[key] = '';
-        }
-        // For any other types, just copy them
-        else {
-          emptyTranslation[key] = value;
-        }
-      });
+      final Map<String, dynamic> emptyTranslation = _createEmptyNode(jsonData);
 
       // Write the empty translation file with indentation
       final File targetFile = createFile(targetPath);
@@ -430,6 +411,27 @@ class TranslateCommand extends Command<int> {
     } catch (e) {
       throw Exception('Error processing file $sourcePath: $e');
     }
+  }
+
+  Map<String, dynamic> _createEmptyNode(Map<String, dynamic> sourceNode) {
+    final Map<String, dynamic> result = {};
+
+    for (final key in sourceNode.keys) {
+      final value = sourceNode[key];
+
+      if (key.startsWith('@')) {
+        // Metadata keys are copied directly from source
+        result[key] = value;
+      } else if (value is Map<String, dynamic>) {
+        // Handle nested map
+        result[key] = _createEmptyNode(value);
+      } else {
+        // For translatable string values
+        result[key] = '';
+      }
+    }
+
+    return result;
   }
 
   // Helper methods for testing

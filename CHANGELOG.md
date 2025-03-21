@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.7] - 2025-03-21
+
+### Fixed
+- Translation update logic now correctly initializes nested keys with empty values when creating a new target file.
+- Ensured that existing translations in target files are preserved if they are not empty.
+- Properly removes keys that no longer exist in the source file from the target file.
+- 
 ## [1.7.6] - 2025-03-21
 
 ### Fixed
