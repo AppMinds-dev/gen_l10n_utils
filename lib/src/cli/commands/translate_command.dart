@@ -348,15 +348,23 @@ class TranslateCommand extends Command<int> {
       final sourceValue = sourceNode[key];
       final targetValue = targetNode[key];
 
-      if (sourceValue is Map<String, dynamic>) {
-        // Handle nested structures
-        result[key] = _processNode(
+      if (key.startsWith('@')) {
+        // Metadata keys are copied directly from source
+        result[key] = sourceValue;
+      } else if (sourceValue is Map<String, dynamic>) {
+        // Handle nested map (e.g. plural forms or placeholders)
+        final processedChild = _processNode(
           sourceValue,
-          (targetValue as Map<String, dynamic>?) ?? {},
+          (targetValue is Map<String, dynamic>) ? targetValue : {},
         );
+        result[key] = processedChild;
       } else {
-        // For non-map values, keep existing translation or use empty string
-        result[key] = targetNode.containsKey(key) ? targetValue : '';
+        // For translatable string values
+        if (targetNode.containsKey(key)) {
+          result[key] = targetValue;
+        } else {
+          result[key] = '';
+        }
       }
     }
 
