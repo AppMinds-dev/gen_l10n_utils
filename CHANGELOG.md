@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.8] - 2025-03-21
+
+### Changed
+- `gen-arb`: Modified the `gen-arb` command to transform keys in the simplified ARB files, replacing '.' with '_' to ensure compatibility with flutter gen-l10n.
+
 ## [1.7.7] - 2025-03-21
 
 ### Fixed

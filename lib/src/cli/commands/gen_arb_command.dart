@@ -112,7 +112,9 @@ class GenArbCommand extends Command<int> {
               mergeArbFilesWithConflictDetection(languageFiles[lang]!);
 
           // Generate simplified version (just translations)
-          final simplifiedContent = _createSimplifiedArb(result.content);
+          var simplifiedContent = _createSimplifiedArb(result.content);
+          // Transform keys to replace '.' with '_'
+          simplifiedContent = _transformKeys(simplifiedContent);
           final sortedSimplified = _sortMapByKeys(simplifiedContent);
 
           // Generate metadata version
@@ -268,5 +270,14 @@ class GenArbCommand extends Command<int> {
     }
 
     return sortedMap;
+  }
+
+  Map<String, dynamic> _transformKeys(Map<String, dynamic> map) {
+    final transformedMap = <String, dynamic>{};
+    map.forEach((key, value) {
+      final newKey = key.replaceAll('.', '_');
+      transformedMap[newKey] = value;
+    });
+    return transformedMap;
   }
 }
